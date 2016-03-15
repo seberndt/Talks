@@ -1,0 +1,617 @@
+\documentclass[german,table]{beamer}
+\usepackage[utf8]{luainputenc}
+
+\usepackage[english,german]{babel}
+
+\usepackage{beamerthemeuzl-conference}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{marvosym}
+\usepackage{subfigure}
+\usepackage{mdframed}
+\usepackage{bm}
+\usepackage{ifthen}
+\usepackage{relsize}
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+
+
+\usetikzlibrary{decorations.pathmorphing, calc, positioning, backgrounds,
+  fit, shapes, arrows.meta, decorations.pathreplacing, arrows,
+  decorations.markings, patterns}
+\DeclareMathAlphabet{\mathpzc}{OT1}{pzc}{m}{it}
+\DeclareSymbolFont{missing}{OML}{cmr}{m}{n}
+\DeclareMathSymbol{\ell}{\mathord}{missing}{'140}
+
+\DeclareMathOperator{\SIZE}{SIZE}
+\DeclareMathOperator{\poly}{poly}
+\DeclareMathOperator{\Lang}{Lang}
+\newcommand{\dea}{\ := \ }
+\newcommand{\Expect}{{\rm I\kern-.3em E}}
+\newcommand{\kla}{\mathrel{\ \le \ }}
+
+\tikzset{onslide/.code args={<#1>#2}{%
+    \only<#1>{\pgfkeysalso{#2}} % \pgfkeysalso doesn't change the path
+  }}
+
+\newenvironment{colortabular}[1]{\medskip\rowcolors[]{1}{black!10}{structure.fg!3}\tabular{#1}\rowcolor{black!20}}{\endtabular\medskip}
+
+\newcommand{\tikzmark}[1]{\tikz[overlay,remember picture] \node (#1) {};}
+
+% \tikzset{onslide/.code args={<#1>#2}{%
+% \only<#1>{\pgfkeysalso{#2}} 
+% }}
+
+\definecolor{myred}{RGB}{228,32,50}
+\definecolor{myblue}{RGB}{60,169,213}
+\definecolor{myyellow}{RGB}{250,187,0}
+\definecolor{mybrown}{RGB}{219,215,187}
+\newcommand{\red}[1]{\textcolor{myred}{#1}}
+\newcommand{\blue}[1]{\textcolor{myblue}{#1}}
+\newcommand{\yellow}[1]{\textcolor{myyellow}{#1}}
+\newcommand{\brown}[1]{\textcolor{mybrown}{#1}}
+
+\usepackage{pdfcomment}
+\newcommand{\pdfnote}[1]{\marginnote{\pdfcomment[icon=note]{#1}}}
+
+\title{Steganography Based on Pattern Languages}
+\author{\emph{Sebastian Berndt} \and Rüdiger Reischuk}
+\institute{Institut für Theoretische Informatik,
+  Universität zu Lübeck}
+\date{16.03.2016}
+
+% \setbeamerfont{alerted text}{shape=\normalfont}
+% \setbeamercolor{alerted text}{fg=black}
+% \setbeamercolor{itemize/enumerate body}{fg=black!60!white}
+% \setbeamercolor{block body}{bg=black!5!white}
+
+
+
+\pgfdeclarelayer{l1}
+\pgfdeclarelayer{background}
+\pgfsetlayers{l1,background,main}
+
+\setbeamertemplate{blocks}[rounded][shadow=false]
+% \includeonlyframes{current}
+\date{}
+\begin{document}
+\maketitle
+
+\begin{frame}
+  \frametitle{And now for something completely different!}
+
+  \begin{itemize}[<+->]
+  \item Cryptography: Hide the content of a message\medskip
+  \item Steganography: Hide that a message is transferred
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+
+  \frametitle{Sometimes, cryptography is not enough}
+  \begin{center}
+    \includegraphics[height=.8\textheight]{wikileaks}  
+  \end{center}
+\end{frame}
+
+
+
+\begin{frame}
+  \frametitle{Overview}
+  \tableofcontents
+  
+\end{frame}
+
+\section{Steganography}
+
+\begin{frame}
+  \frametitle{The Prisoners' Problem (not the Dilemma)}
+  
+  \begin{center}
+    \begin{tikzpicture}
+      \node[label=below:{Alice}] (alice) {\reflectbox{\includegraphics[scale=0.05]{alice2}}};
+
+      \node[label=below:{Bob},right of = alice, xshift=5cm] (bob) {\includegraphics[scale=0.05]{bob}};
+      
+
+      \onslide<2->{    \draw[-,decorate,decoration=snake,very thick,color=blue] ($(alice)+(0.7cm,0)$) to ($(bob)-(0.7cm,0)$);
+        \draw[-,decorate,decoration=snake,transform
+        canvas={yshift=0.1cm},very thick,color=blue] ($(alice)+(0.7cm,0)$) to
+        ($(bob)-(0.7cm,0)$);
+        \node[color=blue] (d1) at ($(alice)+(1.7cm,-0.4cm)$)  {$d_{1}$};
+        \node[color=blue] (d2) at ($(alice)+(2.2cm,-0.4cm)$)  {$d_{2}$};
+        \node[color=blue] (ddots1) at ($(alice)+(2.7cm,-0.4cm)$)  {$\cdots$};
+        \node[color=blue] (di) at ($(alice)+(3.2cm,-0.4cm)$)  {\only<-5>{$d_{i}^{\phantom{*}}$}\only<6->{$d_{i}^{*}$}};
+        \node[color=blue] (ddots2) at ($(alice)+(3.7cm,-0.4cm)$)  {$\cdots$};
+        \node[color=blue] (dl) at ($(alice)+(4.2cm,-0.4cm)$)  {$d_{\ell}$};
+
+      }
+      
+
+      
+      \onslide<3->{    \node[above left of = bob,yshift=1cm,xshift=-1.9cm, text=blue]  (channel)
+        {Channel $\mathcal{C} =(D(\mathcal{C})\subseteq \Sigma^{*},P(\mathcal{C}))$};
+        
+        \draw[->,color=blue, very thick](channel) to ($(bob)-(2cm,-0.3cm)$);
+      }
+
+      \onslide<4->{
+        \node[below right of = alice, yshift=-0.5cm,xshift=0.4cm] (message)
+        {$m$};
+        \draw[->,very thick, dashed] ($(alice)+(0.7cm,-0.5cm)$) to (message);
+        \onslide<4>{\draw[->,very thick,dashed] (message) to ($(bob)+(-0.7,-0.5cm)$);}
+
+      }
+
+
+
+      \onslide<5->{
+        \draw[->,very thick,dashed] (message) to (di);    
+      }
+
+
+      \onslide<7->{    \node[label=below:{\textcolor{red}{Warden}},right of = alice, xshift=2cm,yshift=-3cm]
+        (warden) {\includegraphics[scale=0.03]{officer}};
+      }
+      \onslide<8->{
+        \draw[->,very thick,color=red] (warden) to (d1);
+        \draw[->,very thick,color=red] (warden) to (d2);
+        \draw[->,very thick,color=red] (warden) to (di);
+        \draw[->,very thick,color=red] (warden) to (dl);
+      }
+      \onslide<9->{
+        \node (k) at ($(bob)!0.5!(alice)+(0,3cm)$) {key $K$};
+        \draw[thick] (alice.north) |- (k.west);
+        \draw[thick] (bob.north) |- (k.east);
+      }
+    \end{tikzpicture}
+  \end{center}
+
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Requirements of a stegosystem}
+  \begin{itemize}
+    \onslide<1->{\item Warden should not be able to distinguish $d_{i}$ from
+      $d_{i}^{*}$ (\alert{Security})\medskip}
+    \onslide<2->{\item Bob should be able to reconstruct the
+      message (\alert{Reliability})\medskip}
+    \onslide<3->{\item Alice and Bob should be computational
+      feasible (\alert{Efficiency})\medskip}
+    \onslide<4->{ \item Alice should get high transmission rate
+      (\alert{Rate-efficiency})\\\onslide<5->{(Bounded by the
+        \emph{channel-entropy $n$})}
+      \medskip}
+    \onslide<6->{ \item Should work for as much channels as possible (\alert{Applicability})}
+  \end{itemize}
+
+  % \onslide<5->{
+  % \begin{block}{Examples}
+  %   \begin{itemize}
+  %   \item \onslide<5->{Alice returns a random sample
+  %     document\onslide<6->{ (secure, efficient)}}
+  %   \item \onslide<7->{Alice sends the message as it is
+  %     \onslide<8->{(reliable, efficient, rate-efficient)}}
+  %   \item \onslide<9->{Alice takes samples until one embeds
+  %     the message\onslide<10->{(secure, reliable, rate-efficient)}}
+  %   \end{itemize}
+  % \end{block}
+  % }  
+\end{frame}
+
+% \begin{frame}
+
+%   \frametitle{Steganography}
+
+% \end{frame}
+
+\begin{frame}
+  \frametitle{Universality}
+  \begin{block}{Universal}
+    \begin{itemize}
+    \item  Stegosystem is \alert{universal} if it works for \emph{every} channel.
+    \item<2->
+      Such secure systems can embed only $\log n$ bits. \onslide<3->{Practical
+        systems embed $\sqrt{n}$.}
+    \item<4-> To embed \texttt{HELLO WORLD}, we need length $\geq
+      2^{88}\approx 3\cdot 10^{12}\text{PB}\approx 10^{10}\cdot
+      \mathop{Space}(\text{Facebook})$.
+      % \item<4-> Longstanding Conjecture: Rate $\sqrt{n}$ is always achievable!
+    \end{itemize}
+  \end{block}
+
+  \onslide<5->{
+    \begin{block}{Task}
+      Be more specific: Develop stegosystem for large channel-family $\mathcal{F}\,$!
+    \end{block}
+  }
+
+
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Previous Work}
+  \begin{colortabular}{cccp{31mm}}
+    LB on Rate & UB on Rate & Channels &  Authors \\
+    $\log(n)$ & \xmark & universal & Hopper et al. (2002)\pause
+    \\
+    $\log(n)$ & $\log(n)$ & universal & Dedi{\'c} et
+    al. (2005)\pause \\
+    $\sqrt{n}$ & \xmark & Monomials & Li\'{s}kiewicz et al. (2011)
+    \pause \\
+    $\sqrt{n}$ & \xmark & Pattern Languages & \textcolor{structure.fg}{this work}
+  \end{colortabular}
+  \onslide<5>{Much more systems exist, but none are provable secure!}
+
+\end{frame}
+
+\section{Pattern Languages}
+\begin{frame}
+  \frametitle{Monomials}
+  \begin{columns}
+    \begin{column}{.28\textwidth}
+      \begin{tikzpicture}
+        
+
+        \node (t) {\begin{colortabular}{r}
+            $X=\red{?}01\red{?}1\red{?}$\\
+            \hline
+            $\red{0}01\red{0}1\red{0}$\\
+            $\red{0}01\red{0}1\red{1}$\\
+            $\red{0}01\red{1}1\red{0}$\\
+            $\red{0}01\red{1}1\red{1}$\\
+            $\red{1}01\red{0}1\red{0}$\\
+            $\red{1}01\red{0}1\red{1}$\\
+            $\red{1}01\red{1}1\red{0}$\\
+            $\red{1}01\red{1}1\red{1}$
+          \end{colortabular}};
+        \onslide<2->{
+          \draw[decorate, decoration={brace},thick] ($(t.north east) + (0,-.7cm)$) --
+          ($ (t.south east) + (0,.2cm) $)
+          node[midway,xshift=.5cm] {$D(\mathcal{C})$};
+        }
+
+      \end{tikzpicture}
+    \end{column}
+    \begin{column}{.68\textwidth}
+      \onslide<3->{
+        \begin{block}{The system}
+          \begin{enumerate}
+          \item Partition the positions of $X$ into blocks $B_{1},\ldots,B_{b}$ via PRP
+          \item Replace the different $\red{?}$'s such that $\sum_{x\in B_{i}} x=m_{i}$
+          \end{enumerate}
+        \end{block}}
+      
+      \onslide<4->{ \begin{block}{Restrictions}
+          \begin{itemize}
+          \item<4-> Simplest non-trivial language
+          \item<5-> Simple cross product
+          \end{itemize}
+        \end{block}}
+
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Patterns}
+  \begin{columns}
+    \begin{column}{.28\textwidth}
+
+      \begin{colortabular}{c}
+        $\pi=\red{x_{1}}01\blue{x_{2}}1\red{x_{1}}$\\
+        \hline
+        $011$\\
+        $\red{0}011\red{0}$\\
+        $01\blue{0}1$\\
+        $\red{0}01\blue{0}1\red{0}$\\
+        \ldots\\
+        $\red{1111}01\blue{00}1\red{1111}$\\
+        \ldots
+      \end{colortabular}
+    \end{column}
+    \begin{column}{.68\textwidth}
+      \onslide<2->{
+        \begin{block}{Advantages}
+          \begin{itemize}
+          \item<2-> More realistic (forms, websites etc.)
+          \item<3-> Much larger class of languages
+          \end{itemize}
+        \end{block}
+      }
+    \end{column}
+  \end{columns}
+\end{frame}
+
+
+\section{The stegosystem}
+
+\begin{frame}
+  \frametitle{Pattern Channels}
+  \begin{itemize}[<+->]
+  \item $D(\mathcal{C})\subseteq \Lang(\pi)$\medskip
+  \item The pattern $\pi$ is known (or can be learned)\medskip
+  \item The documents are of approximately same size\medskip
+  \item Substitutions of variables are independent\medskip
+  \end{itemize}
+
+  \begin{center}
+  \begin{tikzpicture}
+    \node (a) {};
+    \node[right = of a, xshift=8cm] (b) {};
+    \draw[-,decorate,decoration=snake,transform
+    canvas={yshift=0.1cm},very thick,color=blue] (a) to
+    (b);
+    \draw[-,decorate,decoration=snake,very thick,color=blue] (a) to (b);
+        \node[color=blue] (d1) at ($(a)+(1.7cm,-0.4cm)$)  {$d_{1}$};
+        \node[color=blue] (d2) at ($(a)+(2.2cm,-0.4cm)$)  {$d_{2}$};
+        \node[color=blue] (ddots1) at ($(a)+(2.7cm,-0.4cm)$)  {$\cdots$};
+        \node[color=blue] (di) at ($(a)+(3.2cm,-0.4cm)$)  {$d_{i}$};
+        \node[color=blue] (ddots2) at ($(a)+(3.7cm,-0.4cm)$)  {$\cdots$};
+        \node[color=blue] (dl) at ($(a)+(4.2cm,-0.4cm)$)  {$d_{\ell}$};
+        \node[color=blue] (symb) at ($(a)+(5.4cm,-0.4cm)$)  {$\sim \Lang(\pi)$};
+
+  \end{tikzpicture}
+  \end{center}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{The stegosystem}
+  \begin{itemize}[<+->]
+  \item Expand $\pi = x_{1}01x_{2}1x_{1}$ into
+    $[\pi]=y_{1}y_{2}y_{3}01y_{4}1y_{1}y_{2}y_{3}$.
+  \item Use pseudo-random function $F_{K}$ to partition $[\pi]$ in $b$ Blocks
+
+    \begin{center}
+      
+
+      \scalebox{.7}{
+        \begin{tikzpicture}[node distance=0.03cm]
+          \node[circle,onslide=<6->{draw,fill=myred}] (y1)
+          {\only<-6>{$y_{1}$}\only<7->{\phantom{$y_{1}$}}};
+          \node[below= of y1,circle,onslide=<6->{draw,fill=myblue}] (y2)
+          {\only<-6>{$y_{2}$}\only<7->{\phantom{$y_{2}$}}};
+          \node[below= of y2,circle,onslide=<6->{draw,fill=myyellow}] (y3) {\only<-6>{$y_{3}$}\only<7->{\phantom{$y_{3}$}}};
+          \node[below= of y3] (t0) {\only<-6>{$0$}\only<7->{\phantom{0}}};
+          \node[below= of t0] (t1) {\only<-6>{$1$}\only<7->{\phantom{1}}};
+          \node[below= of t1,circle,onslide=<6->{draw,fill=mybrown}] (y4) {\only<-6>{$y_{4}$}\only<7->{\phantom{$y_{4}$}}};
+          \node[below= of y4] (s1) {\only<-6>{$1$}\only<7->{\phantom{1}}};
+          \node[below= of s1,circle,onslide=<6->{draw,fill=myred}] (y1p) {\only<-6>{$y_{1}$}\only<7->{\phantom{$y_{1}$}}};
+          \node[below= of y1p,circle,onslide=<6->{draw,fill=myblue}] (y2p) {\only<-6>{$y_{2}$}\only<7->{\phantom{$y_{2}$}}};
+          \node[below= of y2p,circle,onslide=<6->{draw,fill=myyellow}] (y3p) {\only<-6>{$y_{3}$}\only<7->{\phantom{$y_{3}$}}};
+
+          \node[right = of y1, rectangle, draw, minimum
+          width=4cm,xshift=3cm, minimum height=1cm] (b1) {
+            \only<4-6>{$0$, $y_{4}$, $1$, $y_{1}$, $y_{3}$}
+            \only<7->{ \tikz{\node[circle,draw,fill=mybrown,scale=.1]{}}
+              \tikz{\node[circle,draw,fill=myred,scale=.1]{}}
+              \tikz{\node[circle,draw,fill=myyellow,scale=.1]{}}
+            }
+          };
+          \node[below = of b1, rectangle, draw, minimum width=4cm,minimum
+          height=1cm,yshift=-1.6cm] (b2) {
+            \only<4-6>{$y_{1}$, $y_{2}$}
+            \only<7->{ 
+              \tikz{\node[circle,draw,fill=myred,scale=.1]{}}
+              \tikz{\node[circle,draw,fill=myblue,scale=.1]{}}
+            }
+          };
+          \node[below = of b2, rectangle, draw, minimum width=4cm,minimum
+          height=1cm,yshift=-1.6cm] (b3) {
+            \only<4-6>{$y_{3}$, $1$, $y_{2}$}
+            \only<7->{ 
+              \tikz{\node[circle,draw,fill=myyellow,scale=.1]{}}
+              \tikz{\node[circle,draw,fill=myblue,scale=.1]{}}
+            }
+          };
+
+          \onslide<3->{
+            \node[right = of y1, xshift=1.5cm,yshift=.2cm] {$F_{K}$};
+            
+            \draw[->,thick] (y1) to (b2.west);
+            \draw[->,thick] (y2) to (b2.west);
+            \draw[->,thick] (y3) to (b3.west);
+            \draw[->,thick,onslide=<5->{opacity=0}] (t0) to (b1.west);
+            \draw[->,thick,onslide=<5->{opacity=0}] (t1) to (b3.west);
+            \draw[->,thick] (y4) to (b1.west);
+            \draw[->,thick,onslide=<5->{opacity=0}] (s1) to (b1.west);
+            \draw[->,thick] (y1p) to (b1.west);
+            \draw[->,thick] (y2p) to (b3.west);
+            \draw[->,thick] (y3p) to (b1.west);}
+
+          \onslide<5>{
+            \node[right = of b1] {$y_{1}+y_{3}+y_{4}+1=m_{1}$};
+            \node[right = of b2] {$y_{1}+y_{2}=m_{2}$};
+            \node[right = of b3] {$y_{2}+y_{3}+1=m_{3}$};
+
+          }
+        \end{tikzpicture}}
+    \end{center}
+  \end{itemize}
+
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Coloured Balls into Bins}
+  \begin{center}
+    
+    \begin{tikzpicture}
+      
+      \node[rectangle, draw, minimum
+      width=4cm,minimum height=1cm] (b1) {
+        \tikz{\node[circle,draw,fill=mybrown,scale=.1]{}}
+        \tikz{\node[circle,draw,fill=myred,scale=.1]{}}
+        \tikz{\node[circle,draw,fill=myyellow,scale=.1]{}}
+      };
+      
+      \node[below = of b1, rectangle, draw, minimum width=4cm,minimum
+      height=1cm,yshift=.8cm] (b2) {
+        \tikz{\node[circle,draw,fill=myred,scale=.1]{}}
+        \tikz{\node[circle,draw,fill=myblue,scale=.1]{}}
+      };
+      \node[below = of b2, rectangle, draw, minimum width=4cm,minimum
+      height=1cm,yshift=.8cm] (b3) {
+        \tikz{\node[circle,draw,fill=myyellow,scale=.1]{}}
+        \tikz{\node[circle,draw,fill=myblue,scale=.1]{}}
+      };
+
+      \onslide<2->{
+        
+        \node[right = of b2] (tab){
+          \begin{tabular}{c|c|c|c}
+            \tikz{\node[circle,draw,fill=mybrown,]{}}&
+                                                       \tikz{\node[circle,draw,fill=myred,]{}}&
+                                                                                                \tikz{\node[circle,draw,fill=myyellow,]{}}&
+                                                                                                                                            \tikz{\node[circle,draw,fill=myblue,]{}}\\
+            \hline
+            1 & 1 & 1 & 0\\
+            0 & 1 & 0 & 1\\
+            0 & 0 & 1 & 1
+          \end{tabular}
+        };
+        
+        \draw[thick,-{>[]}] (b1) to (tab);
+        \draw[thick,-{>[]}] (b2) to (tab);
+        \draw[thick,-{>[]}] (b3) to (tab);
+      }
+    \end{tikzpicture}
+  \end{center}
+  \begin{itemize}
+  \item<3-> Columns are independent
+  \item<4-> Rows are \emph{not} independent
+  \end{itemize}
+
+  \onslide<5->{
+    \begin{block}{Theorem (Generalization of Poisson Approximation)}
+      W.h.p. there are many colours such that the corresponding rows behave independently!
+    \end{block}}
+
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Some Useful Lemmata}
+
+  \begin{lemma}
+    Let $C$ be the coloured-balls-into-bin matrix with $\mu$ bins, where
+    each colour appears at most $\xi$ times and let $X$ be a matrix of
+    pairwise independent Poisson-distributed RVs.
+
+    For every predicate $Q$ of arity $l$, let $\mathcal{E}_{Q}(X)$ be the
+    probability that $X$ has a subset of $l$ columns
+    $X_{z_{1}}, \ldots,X_{z_{l}}$ such that
+    $Q(X_{z_{1}}, \ldots,X_{z_{l}})$ holds. Then:
+    \begin{align*}
+      \Pr[\mathcal{E}_{Q}(C)] \kla
+      \frac{\Pr[\mathcal{E}_{Q}(X)]}{1-2\exp\left(-2 \; \eta(l,n,\xi)\right)} \ . 
+    \end{align*}
+
+  \end{lemma}
+  \onslide<2->{
+    \begin{lemma}
+      The matrix $M$ with $m_{i,j}=x_{i,j} \bmod 2$  has full rank 
+      over $\mathbb{F}_{2}$ with  probability at least $1-\mu\cdot (4/5)^{\mu}$.
+    \end{lemma}}
+
+  \onslide<3->{
+    \begin{corollary}
+      If \alert{$n \geq b^{2}$}, it holds that:
+      $|\Pr[\mathcal{E}_{Q}(C)]-\Pr[\mathcal{E}_{Q}(X)]|\leq
+      \exp(-n)$. 
+    \end{corollary}}
+  
+\end{frame}
+
+
+
+
+\section{Conclusion}
+\begin{frame}
+  \frametitle{Open Questions}
+  \begin{itemize}[<+->]
+  \item Public-Key Scenario?
+  \item Steganography for other families of languages ($D(\mathcal{C})$
+    described by automata, grammars, logics, \ldots)?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Conclusion}
+
+  \begin{center}
+    {\Large Secure, rate-efficient steganography is possible on realistic channels!}  
+  \end{center}
+
+  \begin{center}
+    
+    \scalebox{.8}{
+      \begin{tikzpicture}
+        \node[label=below:{Alice}] (alice) {\reflectbox{\includegraphics[scale=0.05]{alice2}}};
+
+        \node[label=below:{Bob},right of = alice, xshift=5cm] (bob) {\includegraphics[scale=0.05]{bob}};
+        
+
+        \draw[-,decorate,decoration=snake,very thick,color=blue] ($(alice)+(0.7cm,0)$) to ($(bob)-(0.7cm,0)$);
+        \draw[-,decorate,decoration=snake,transform
+        canvas={yshift=0.1cm},very thick,color=blue] ($(alice)+(0.7cm,0)$) to
+        ($(bob)-(0.7cm,0)$);
+        \node[color=blue] (d1) at ($(alice)+(1.7cm,-0.4cm)$)  {$d_{1}$};
+        \node[color=blue] (d2) at ($(alice)+(2.2cm,-0.4cm)$)  {$d_{2}$};
+        \node[color=blue] (ddots1) at ($(alice)+(2.7cm,-0.4cm)$)  {$\cdots$};
+        \node[color=blue] (di) at ($(alice)+(3.2cm,-0.4cm)$)  {$d_{i}^{*}$};
+        \node[color=blue] (ddots2) at ($(alice)+(3.7cm,-0.4cm)$)  {$\cdots$};
+        \node[color=blue] (dl) at ($(alice)+(4.2cm,-0.4cm)$)  {$d_{\ell}$};
+
+        
+
+        
+        \node[above left of = bob,yshift=1cm,xshift=-1.9cm, text=blue]  (channel)
+        {Channel $\mathcal{C} =(D(\mathcal{C})\subseteq \Sigma^{*},P(\mathcal{C}))$};
+        
+        \draw[->,color=blue, very thick](channel) to ($(bob)-(2cm,-0.3cm)$);
+
+
+        \node[below right of = alice, yshift=-0.5cm,xshift=0.4cm] (message)
+        {$m$};
+        \draw[->,very thick, dashed] ($(alice)+(0.7cm,-0.5cm)$) to (message);
+
+
+
+
+        \draw[->,very thick,dashed] (message) to (di);    
+
+
+        \node[label=below:{\textcolor{red}{Warden}},right of = alice, xshift=2cm,yshift=-3cm]
+        (warden) {\includegraphics[scale=0.03]{officer}};
+
+
+        \begin{scope}[on background layer]
+          \draw[->,very thick,color=red] (warden) to (d1);
+          \draw[->,very thick,color=red] (warden) to (d2);
+          \draw[->,very thick,color=red] (warden) to (di);
+          \draw[->,very thick,color=red] (warden) to (dl);
+        \end{scope}
+
+
+        \node (k) at ($(bob)!0.5!(alice)+(0,3cm)$) {key $K$};
+        \draw[thick] (alice.north) |- (k.west);
+        \draw[thick] (bob.north) |- (k.east);
+
+      \end{tikzpicture}}
+  \end{center}
+
+
+
+\end{frame}
+\end{document}
+
+
+

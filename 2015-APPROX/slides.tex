@@ -1,0 +1,1075 @@
+\documentclass[german,table]{beamer}
+\usepackage[utf8]{luainputenc}
+
+\usepackage[english,german]{babel}
+
+\usepackage{beamerthemeuzl-conference}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{marvosym}
+\usepackage{subfigure}
+\usepackage{mdframed}
+\usepackage{bm}
+\usepackage{ifthen}
+\usepackage{relsize}
+\usepackage{pifont}% http://ctan.org/pkg/pifont
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+
+
+\usetikzlibrary{decorations.pathmorphing, calc, positioning, backgrounds,
+fit, shapes, arrows.meta, decorations.pathreplacing, arrows,
+decorations.markings, patterns}
+\DeclareMathAlphabet{\mathpzc}{OT1}{pzc}{m}{it}
+ \DeclareSymbolFont{missing}{OML}{cmr}{m}{n}
+ \DeclareMathSymbol{\ell}{\mathord}{missing}{'140}
+
+\DeclareMathOperator{\SIZE}{SIZE}
+\DeclareMathOperator{\poly}{poly}
+
+\newenvironment{colortabular}[1]{\medskip\rowcolors[]{1}{black!10}{structure.fg!3}\tabular{#1}\rowcolor{black!20}}{\endtabular\medskip}
+
+% \tikzset{onslide/.code args={<#1>#2}{%
+%   \only<#1>{\pgfkeysalso{#2}} 
+% }}
+
+\usepackage{pdfcomment}
+\newcommand{\pdfnote}[1]{\marginnote{\pdfcomment[icon=note]{#1}}}
+
+\title{Fully Dynamic Bin Packing Revisited}
+\author{\emph{Sebastian Berndt} \inst{1} \and Klaus Jansen \inst{2} \and
+  Kim-Manuel Klein \inst{2}}
+\institute{\inst{1} Institut für Theoretische Informatik,
+  Universität zu Lübeck \and \inst{2} Department of Computer Science, Christian-Albrechts-University to Kiel}
+\date{\today}
+
+\setbeamerfont{alerted text}{shape=\normalfont}
+\setbeamercolor{alerted text}{fg=black}
+\setbeamercolor{itemize/enumerate body}{fg=black!60!white}
+
+
+\newcommand{\myOperation}[4]{
+
+  \onslide<#1>{
+    \node[thick,draw=structure.fg,fill=structure.fg!20,rectangle,minimum
+    height=5mm, anchor=west] at (#3 cm,5cm) {#4\textcolor{structure.fg!20}{,}};
+  }
+  \onslide<#2->{
+   \node[thick,rectangle,minimum height=5mm, anchor=west, draw=white, fill=white] at (#3 cm,5cm)
+   {#4,};
+ }
+}
+
+\newcommand{\myOperationLast}[4]{
+
+  \onslide<#1>{
+    \node[thick,draw=structure.fg,fill=structure.fg!20,rectangle,minimum
+    height=5mm, anchor=west] at (#3 cm,5cm) {#4};
+  }
+  \onslide<#2->{
+   \node[thick,rectangle,minimum height=5mm, anchor=west, draw=white, fill=white] at (#3 cm,5cm)
+   {#4};
+ }
+}
+\newcommand{\myOperationO}[3]{
+
+  \onslide<#1>{
+    \node[font=\fontsize{9}{144}\selectfont,thick,draw=structure.fg,fill=structure.fg!20,rectangle,minimum
+    height=5mm, anchor=west] at (#2 cm,5cm) {#3};
+  }
+
+}
+
+\def\itempadding{1.5pt}
+\def\boxpadding{3pt}
+\newcommand{\drawBin}[4]{
+  \begin{scope}[x= 1cm, y=4cm]
+\onslide<#2-#3>{
+  \draw [#4] ($(#1,0)+(-\itempadding,-\itempadding)$) 
+  rectangle 
+  ($(#1,1)+(\itempadding,\itempadding)+(1,0)$);
+}
+  \end{scope}
+}
+% \draw[thick] (#1,0) to (#1,4);
+% \draw[thick] ($(#1,0)+(1,0)$) to ($(#1,0)+(1,4)$);
+% \draw[thick] (#1,0) to ($(#1,0)+(1,0)$);
+% \draw[thick] (#1,4) to ($(#1,4)+(1,0)$);}
+
+
+\newcommand{\addToBin}[8]{
+  \begin{scope}[x= 1cm, y=4cm, rounded corners=2pt]
+  \onslide<#7-#8>{
+       \draw [#5] 
+       ($(#1,#2)+(\itempadding,\itempadding)$) 
+       rectangle node (#6) {#4} 
+       ($(#1,#2)+(-\itempadding,-\itempadding)+(1,#3)$);
+
+}
+\end{scope}
+}
+
+
+\newcommand{\myOperationName}[1]{\texttt{\textbf{#1}}}
+
+\pgfdeclarelayer{l1}
+\pgfdeclarelayer{background}
+\pgfsetlayers{l1,background,main}
+
+
+%\includeonlyframes{current}
+\date{}
+\begin{document}
+\maketitle
+
+\begin{frame}{Fully Dynamic Bin Packing}
+  
+  \begin{center}
+    {\huge
+    Fully Dynamic Bin Packing = \newline Online  + Removal +
+    Repacking}
+  \end{center}
+\end{frame}
+\begin{frame}{Fully Dynamic Bin Packing = Online  + Removal +
+    Repacking}
+  \begin{center}
+    
+
+  \begin{tikzpicture}
+
+    \myOperation{1}{2}{-1}{\myOperationName{INS}: $a/0.2$}
+
+    \myOperation{2}{3}{1}{\myOperationName{INS}: $b/0.3$}
+    \myOperation{3}{4}{3}{\myOperationName{INS}: $c/0.4$}
+    \myOperation{4}{5}{5}{\myOperationName{INS}: $d/0.2$}
+    \myOperation{5}{6}{7}{\myOperationName{INS}: $e/0.3$}
+    \myOperationLast{6-10}{11}{9}{\myOperationName{REM}: $c$}
+
+    \drawBin{0}{2}{12}{}
+    \drawBin{1.5}{5}{9}{}
+    \addToBin{0}{0}{.2}{$a$}{fill=black!20!white}{a}{2}{12}
+    \addToBin{0}{.2}{.3}{$b$}{fill=black!20!white}{b}{3}{12}
+    \addToBin{0}{.5}{.4}{$c$}{fill=black!20!white}{c}{4}{6}
+
+    \addToBin{1.5}{0}{.3}{$d$}{fill=black!20!white}{d}{5}{9}
+    \addToBin{1.5}{.3}{.2}{$e$}{fill=black!20!white}{e}{6}{9}
+    
+    \addToBin{0}{.5}{.3}{}{draw=none}{ds}{8}{12}
+    \addToBin{0}{.8}{.2}{}{draw=none}{es}{8}{12}
+    \addToBin{0}{.5}{.3}{}{densely dashed}{dsd}{9}{9}
+    \addToBin{0}{.8}{.2}{}{densely dashed}{esd}{9}{9}
+
+    \addToBin{0}{.5}{.3}{$d$}{fill=black!20!white}{dsm}{10}{12}
+    \addToBin{0}{.8}{.2}{$e$}{fill=black!20!white}{esm}{10}{12}
+    
+    \onslide<8-9>{
+      \draw[->,thick] (e.north west) to (es);
+      \draw[->,thick] (d.north west) to (ds);
+    }
+
+
+
+   \onslide<11-12>{
+      \begin{scope}[xshift=4cm]
+        
+
+      \node (mf) at (2,2) {\textcolor{structure.fg}{$\text{Migration Factor}_{t}$} = $\frac{\text{
+        \begin{tikzpicture}
+          \drawBin{0}{11}{12}{color=white}
+          \drawBin{1.5}{11}{12}{color=white}
+          \addToBin{0}{0}{.3}{$d$}{fill=black!20!white}{d}{10}{12}
+          \addToBin{1.5}{0}{.2}{$e$}{fill=black!20!white}{e}{10}{12}
+          \node at ($ (e) !.5! (d)$) {{\Large +}};
+        \end{tikzpicture}}}
+      {\text{
+        \begin{tikzpicture}
+          \drawBin{0}{11}{12}{color=white}
+          \addToBin{0}{.6}{.4}{$c$}{fill=black!20!white}{c}{10}{12}
+        \end{tikzpicture}}
+        }=\frac{\text{SIZE(moved)}}{\text{SIZE(new/removed)}}$};
+      
+      \onslide<12>{
+      \node[anchor=west] at ($(mf.west)-(0,2.2)$) {\textcolor{structure.fg}{Shifting Moves} =
+       number of moved items};
+
+    }
+      \end{scope}
+}
+
+
+  \end{tikzpicture}
+  \end{center}  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Lower Bound}
+  \begin{block}{Migration Factor of $\Omega(1/\varepsilon)$ is necessary for
+      ratio $1+\varepsilon$}
+    $L=1/2 -1/9 (\text{Migration Factor}),\quad S=1/3(\text{Migration Factor})$
+
+    \begin{tikzpicture}
+      \myOperation{1-2}{3}{0}{\myOperationName{INS}: $L$,\
+        \myOperationName{INS}: $L$,\ \myOperationName{INS}: $L$,\ $\ldots$}
+
+      \drawBin{0}{2}{4}{}
+      \addToBin{0}{0}{.45}{$L$}{fill=black!20!white}{}{2}{4}
+      \addToBin{0}{.45}{.45}{$L$}{fill=black!20!white}{}{2}{4}
+
+     \drawBin{2}{2}{4}{}
+      \addToBin{2}{0}{.45}{$L$}{fill=black!20!white}{}{2}{4}
+      \addToBin{2}{.45}{.45}{$L$}{fill=black!20!white}{}{2}{4}
+
+      \onslide<2->{
+        \node at (1.5,2) {\Large $\ldots$};
+      }
+
+
+
+     \begin{scope}[xshift=7cm]
+       \myOperationO{3-4}{0}{\myOperationName{INS}: $S$,\
+       \myOperationName{INS}: $S$,\ \myOperationName{INS}: $S$,\
+       $\ldots$}      
+
+     \drawBin{0}{4}{4}{}
+     \addToBin{0}{0}{.45}{$L$}{fill=black!20!white}{}{4}{4}
+     \addToBin{0}{.45}{.09}{$S$}{fill=black!20!white}{}{4}{4}
+     \addToBin{0}{.54}{.09}{$S$}{fill=black!20!white}{}{4}{4}
+     \addToBin{0}{.63}{.09}{$S$}{fill=black!20!white}{}{4}{4}
+     \addToBin{0}{.72}{.09}{$S$}{fill=black!20!white}{}{4}{4}
+     \addToBin{0}{.81}{.09}{$S$}{fill=black!20!white}{}{4}{4}
+     \addToBin{0}{.90}{.09}{$S$}{fill=black!20!white}{}{4}{4}
+
+
+     \drawBin{2}{4}{4}{}
+     \addToBin{2}{0}{.45}{$L$}{fill=black!20!white}{}{4}{4}
+     \addToBin{2}{.45}{.09}{$S$}{fill=black!20!white}{}{4}{4}
+     \addToBin{2}{.54}{.09}{$S$}{fill=black!20!white}{}{4}{4}
+     \addToBin{2}{.63}{.09}{$S$}{fill=black!20!white}{}{4}{4}
+     \addToBin{2}{.72}{.09}{$S$}{fill=black!20!white}{}{4}{4}
+     \addToBin{2}{.81}{.09}{$S$}{fill=black!20!white}{}{4}{4}
+     \addToBin{2}{.90}{.09}{$S$}{fill=black!20!white}{}{4}{4}
+
+\onslide<4->{
+  \node at (1.5,2) {\Large $\ldots$};}
+
+     \end{scope}
+
+
+
+    \end{tikzpicture}
+
+
+
+  \end{block}
+\end{frame}
+
+
+
+
+\begin{frame}
+  \frametitle{Online Bin Packing with Repacking}
+
+  \begin{block}{Known Results on upper bounds}
+\vspace{0.3cm}
+{\small
+    \begin{colortabular}{c|c|c|c|p{33.8mm}}
+      Ratio & \myOperationName{REM}?& Shifting M. & Migration F.
+      & Authors\pause \\
+
+
+      $3/2$ & \xmark & 3 & \xmark & Gambosi, Postiglione,\newline Talamo
+                                    (2000) \\
+
+      $4/3$ & \xmark & 7 & \xmark & Gambosi, Postiglione,\newline Talamo
+                                    (2000)\pause \\
+
+      $1+\varepsilon$ & \xmark & $\poly(\log n)$ [am.] & \xmark &
+                                                                    Ivkovi\'{c},
+                                                                    Lloyd
+                                                                    (1997)\\
+
+      $1+\varepsilon$ & \xmark & $2^{\poly(1/\varepsilon)}$ &
+                                                              $2^{\poly(1/\varepsilon)}$
+      & Epstein, Levin (2006)\\
+
+      $1+\varepsilon$ & \xmark & $\mathcal{O}(1/\varepsilon^4) $ &
+                                                          $\mathcal{O}(1/\varepsilon^4) $
+      & Jansen, Klein (2013)\pause \\
+
+      $5/4$ & \cmark & $\poly(\log n)$ [am.] & \xmark & Ivkovi\'{c},
+                                                                    Lloyd
+                                                                    (1998)\\
+
+      $1+\varepsilon$ & \cmark & $\mathcal{O}(1/\varepsilon^4 \log (1/\varepsilon))$ &
+                                                          $\mathcal{O}(1/\varepsilon^4 \log (1/\varepsilon))$
+      & \textcolor{structure.fg}{this work}
+    \end{colortabular}}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{An Overview on the Packing}
+  \begin{center}
+  \begin{tikzpicture}
+    \drawBin{0}{1}{8}{}
+    \onslide<2->{
+      \node at (0.5,-0.6) {\strut Large};
+      }
+    
+    \onslide<4->{
+      \node at (2,-0.6) {\strut Mixed};
+      }
+
+    \onslide<6->{
+      \node at (3.5,-0.6) {\strut Small};
+      }
+    \drawBin{1.5}{3}{8}{}
+
+    \addToBin{0}{0}{.45}{}{fill=black!20!white}{}{2}{6}
+    \addToBin{0}{0}{.45}{}{pattern=north west lines}{}{7}{7}
+    \addToBin{0}{0}{.45}{}{fill=black!20!white}{}{8}{8}
+
+    \addToBin{0}{.45}{.45}{}{fill=black!20!white}{}{2}{6}
+    \addToBin{0}{.45}{.45}{}{pattern=north west lines}{}{7}{7}
+    \addToBin{0}{.45}{.45}{}{fill=black!20!white}{}{8}{8}
+
+
+
+    \addToBin{1.5}{0}{.45}{}{fill=black!20!white}{}{4}{6}
+    \addToBin{1.5}{0}{.45}{}{pattern=north west lines}{}{7}{7}
+    \addToBin{1.5}{0}{.45}{}{fill=black!20!white}{}{8}{8}
+    
+    \addToBin{1.5}{.45}{.1}{}{fill=black!20!white}{}{4}{7}
+    \addToBin{1.5}{.45}{.1}{}{pattern=north west lines}{}{8}{8}
+
+
+    \addToBin{1.5}{.55}{.1}{}{fill=black!20!white}{}{4}{7}
+    \addToBin{1.5}{.55}{.1}{}{pattern=north west lines}{}{8}{8}
+
+
+    \addToBin{1.5}{.65}{.1}{}{fill=black!20!white}{}{4}{7}
+    \addToBin{1.5}{.65}{.1}{}{pattern=north west lines}{}{8}{8}
+
+
+    \addToBin{1.5}{.75}{.1}{}{fill=black!20!white}{}{4}{7}
+    \addToBin{1.5}{.75}{.1}{}{pattern=north west lines}{}{8}{8}
+
+
+    \addToBin{1.5}{.85}{.1}{}{fill=black!20!white}{}{4}{7}
+    \addToBin{1.5}{.85}{.1}{}{pattern=north west lines}{}{8}{8}
+
+
+
+    \drawBin{3}{5}{8}{}
+
+    \addToBin{3}{0}{.1}{}{fill=black!20!white}{}{6}{7}
+    \addToBin{3}{0}{.1}{}{pattern=north west lines}{}{8}{8}
+
+
+    \addToBin{3}{.1}{.1}{}{fill=black!20!white}{}{6}{7}
+    \addToBin{3}{.1}{.1}{}{pattern=north west lines}{}{8}{8}
+
+
+    \addToBin{3}{.2}{.1}{}{fill=black!20!white}{}{6}{7}
+    \addToBin{3}{.2}{.1}{}{pattern=north west lines}{}{8}{8}
+
+
+    \addToBin{3}{.3}{.1}{}{fill=black!20!white}{}{6}{7}
+    \addToBin{3}{.3}{.1}{}{pattern=north west lines}{}{8}{8}
+
+
+    \addToBin{3}{.4}{.1}{}{fill=black!20!white}{}{6}{7}
+    \addToBin{3}{.4}{.1}{}{pattern=north west lines}{}{8}{8}
+
+
+    \addToBin{3}{.5}{.1}{}{fill=black!20!white}{}{6}{7}
+    \addToBin{3}{.5}{.1}{}{pattern=north west lines}{}{8}{8}
+
+
+
+    \addToBin{3}{.6}{.1}{}{fill=black!20!white}{}{6}{7}
+    \addToBin{3}{.6}{.1}{}{pattern=north west lines}{}{8}{8}
+
+
+
+    \addToBin{3}{.7}{.1}{}{fill=black!20!white}{}{6}{7}
+    \addToBin{3}{.7}{.1}{}{pattern=north west lines}{}{8}{8}
+
+
+
+    \addToBin{3}{.8}{.1}{}{fill=black!20!white}{}{6}{7}
+    \addToBin{3}{.8}{.1}{}{pattern=north west lines}{}{8}{8}
+
+
+    \addToBin{3}{.9}{.1}{}{fill=black!20!white}{}{6}{7}
+    \addToBin{3}{.9}{.1}{}{pattern=north west lines}{}{8}{8}
+
+    
+   \end{tikzpicture}
+  \begin{itemize}
+  \item<7-> \only<7>{\alert{Pack via LP}}\only<8->{Pack via LP}
+  \item<8-> \onslide<8>{\alert{Pack via ``Sorting''}}
+  \end{itemize}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Rounding Large Items Geometrically}
+  \begin{enumerate}[<+-|alert@+>]
+  \item Find items of size $(0.5,1]$
+
+
+
+\item Sort items by size
+\item Group items in lists
+\item Round items
+
+  \end{enumerate}
+
+  \begin{tikzpicture}
+    \begin{scope}[yscale = 0.5, xscale=1.1]
+
+\onslide<1>{
+  \addToBin{0}{0}{.51}{$0.51$}{fill=black!20!white}{}{1}{5}
+  \addToBin{1.5}{0}{.6}{$0.6$}{fill=black!20!white}{}{1}{5}
+  \addToBin{3}{0}{.8}{$0.8$}{fill=black!20!white}{}{1}{5}
+  \addToBin{4.5}{0}{.55}{$0.55$}{fill=black!20!white}{}{1}{5}
+  \addToBin{6}{0}{.63}{$0.63$}{fill=black!20!white}{}{1}{5}
+  \addToBin{7.5}{0}{.78}{$0.78$}{fill=black!20!white}{}{1}{5}
+  \addToBin{9}{0}{.52}{$0.52$}{fill=black!20!white}{}{1}{5}
+
+}
+\onslide<2>{
+
+  \addToBin{9}{0}{.51}{$0.51$}{fill=black!20!white}{}{1}{5}
+  \addToBin{4.5}{0}{.6}{$0.6$}{fill=black!20!white}{}{1}{5}
+  \addToBin{0}{0}{.8}{$0.8$}{fill=black!20!white}{}{1}{5}
+  \addToBin{6}{0}{.55}{$0.55$}{fill=black!20!white}{}{1}{5}
+  \addToBin{3}{0}{.63}{$0.63$}{fill=black!20!white}{}{1}{5}
+  \addToBin{1.5}{0}{.78}{$0.78$}{fill=black!20!white}{}{1}{5}
+  \addToBin{7.5}{0}{.52}{$0.52$}{fill=black!20!white}{}{1}{5}
+}      
+
+\onslide<3>{
+
+  \addToBin{9}{0}{.51}{$0.51$}{fill=black!20!white}{i6}{1}{5}
+  \addToBin{4.5}{0}{.6}{$0.6$}{fill=black!20!white}{i3}{1}{5}
+  \addToBin{0}{0}{.8}{$0.8$}{fill=black!20!white}{i0}{1}{5}
+  \addToBin{6}{0}{.55}{$0.55$}{fill=black!20!white}{i4}{1}{5}
+  \addToBin{3}{0}{.63}{$0.63$}{fill=black!20!white}{i2}{1}{5}
+  \addToBin{1.5}{0}{.78}{$0.78$}{fill=black!20!white}{i1}{1}{5}
+  \addToBin{7.5}{0}{.52}{$0.52$}{fill=black!20!white}{i5}{1}{5}
+
+  \begin{scope}[on background layer, y=4cm, x=1cm]
+\onslide<3>{
+  \draw ($ (0,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(4cm,3.2cm) + (\boxpadding,\boxpadding)$);
+
+  \draw ($ (4.5,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(7cm,3.2cm) + (\boxpadding,\boxpadding)$);
+
+  \draw ($ (7.5,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(10cm,3.2cm) + (\boxpadding,\boxpadding)$);
+}
+  \end{scope}
+}
+
+
+\onslide<4>{
+
+  \addToBin{9}{0}{.52}{$0.52$}{fill=black!20!white}{i6}{1}{5}
+  \addToBin{4.5}{0}{.6}{$0.6$}{fill=black!20!white}{i3}{1}{5}
+  \addToBin{0}{0}{.8}{$0.8$}{fill=black!20!white}{i0}{1}{5}
+  \addToBin{6}{0}{.6}{$0.6$}{fill=black!20!white}{i4}{1}{5}
+  \addToBin{3}{0}{.8}{$0.8$}{fill=black!20!white}{i2}{1}{5}
+  \addToBin{1.5}{0}{.8}{$0.8$}{fill=black!20!white}{i1}{1}{5}
+  \addToBin{7.5}{0}{.52}{$0.52$}{fill=black!20!white}{i5}{1}{5}
+
+  \begin{scope}[on background layer, y=4cm, x=1cm]
+\onslide<4>{
+ \draw ($ (0,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(4cm,3.2cm) + (\boxpadding,\boxpadding)$);
+
+  \draw ($ (4.5,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(7cm,3.2cm) + (\boxpadding,\boxpadding)$);
+
+  \draw ($ (7.5,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(10cm,3.2cm) + (\boxpadding,\boxpadding)$);
+}
+  \end{scope}
+}
+
+\onslide<5>{
+
+  \addToBin{9}{0}{.52}{$0.52$}{fill=black!20!white}{i6}{1}{5}
+  \addToBin{4.5}{0}{.6}{$0.6$}{fill=black!20!white}{i3}{1}{5}
+  \addToBin{0}{0}{.8}{$0.8$}{fill=black!20!white}{i0}{1}{5}
+  \addToBin{6}{0}{.6}{$0.6$}{fill=black!20!white}{i4}{1}{5}
+  \addToBin{3}{0}{.8}{$0.8$}{fill=black!20!white}{i2}{1}{5}
+  \addToBin{1.5}{0}{.8}{$0.8$}{fill=black!20!white}{i1}{1}{5}
+  \addToBin{7.5}{0}{.52}{$0.52$}{fill=black!20!white}{i5}{1}{5}
+
+  \begin{scope}[on background layer, y=4cm, x=1cm]
+\onslide<5>{
+
+ \draw ($ (0,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(4cm,3.2cm) + (\boxpadding,\boxpadding)$);
+
+  \draw ($ (4.5,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(7cm,3.2cm) + (\boxpadding,\boxpadding)$);
+
+  \draw ($ (7.5,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(10cm,3.2cm) + (\boxpadding,\boxpadding)$);
+
+ 
+  \begin{pgfonlayer}{l1}
+\onslide<5>{
+    \draw[densely dashed,thick] ($ (0,0) + (-\boxpadding,-\boxpadding) + (-2pt,-9pt)$)
+    rectangle ($ (4cm,3.2cm) + (\boxpadding, \boxpadding)+
+    (2pt,9pt)$);
+
+    \draw[densely dashed,thick] ($ (4.5,0) + (-\boxpadding,-\boxpadding) + (-2pt,-9pt)$)
+    rectangle ($ (10cm,3.2cm) + (\boxpadding, \boxpadding)+ (2pt,9pt)$);}
+  \end{pgfonlayer}{l1}
+  
+
+\node at ($ (i1) + (0,-0.7) $) (a) {$A$-Block};
+
+\draw let \p1 = ($ (i4) !.5! (i5) $) in node at  (\p1 |- a) {$B$-Block};
+}
+  \end{scope}
+
+}
+
+    \end{scope}
+  \end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Packing Large Items}
+  
+\begin{tikzpicture}[node distance=0.3cm]
+
+\tikzset{mystyle/.style={rectangle, minimum
+    height=0.5cm,draw}}
+
+\tikzset{itemstyle/.style={draw, fill=black!20, rounded corners=2pt}}
+
+
+
+
+  \node[mystyle, minimum width = 1.8cm, yshift=-3cm] (bl1) {};
+
+\node[itemstyle] at ($ (bl1.center) +(-0.75cm,0) $) {};
+\node[itemstyle] at ($ (bl1.center) +(-0.45cm,0) $) {};
+\node[itemstyle] at ($ (bl1.center) +(-0.15cm,0) $) {};
+\node[itemstyle] at ($ (bl1.center) +(0.15cm,0) $) {};
+\node[itemstyle] at ($ (bl1.center) +(0.45cm,0) $) {};
+\node[itemstyle] at ($ (bl1.center) +(0.75cm,0) $) {};
+
+ \node[rectangle,minimum height=0.5cm, 
+  right= of bl1] (bll1) {$\ldots$};
+
+  \node[mystyle, minimum width = 1.8cm, right = of bll1] (bl2) {};
+\node[itemstyle] at ($ (bl2.center) +(-0.75cm,0) $) {};
+\node[itemstyle] at ($ (bl2.center) +(-0.45cm,0) $) {};
+\node[itemstyle] at ($ (bl2.center) +(-0.15cm,0) $) {};
+\node[itemstyle] at ($ (bl2.center) +(0.15cm,0) $) {};
+\node[itemstyle] at ($ (bl2.center) +(0.45cm,0) $) {};
+\node[itemstyle] at ($ (bl2.center) +(0.75cm,0) $) {};
+
+
+  \node[mystyle, minimum width = 1.6cm, right = of bl2, xshift=0.1cm]
+  (bl3) {};
+
+\node[itemstyle] at ($ (bl3.center) +(-0.6cm,0) $) {};
+\node[itemstyle] at ($ (bl3.center) +(-0.3cm,0) $) {};
+\node[itemstyle] at ($ (bl3.center) +(-0.0cm,0) $) {};
+\node[itemstyle] at ($ (bl3.center) +(0.3cm,0) $) {};
+\node[itemstyle] at ($ (bl3.center) +(0.6cm,0) $) {};
+
+ \node[rectangle,minimum height=0.5cm, 
+  right= of bl3] (bll2) {$\ldots$};
+
+  \node[mystyle, minimum width = 1.6cm, right = of bll2] (bl4) {};
+\node[itemstyle] at ($ (bl4.center) +(-0.6cm,0) $) {};
+\node[itemstyle] at ($ (bl4.center) +(-0.3cm,0) $) {};
+\node[itemstyle] at ($ (bl4.center) +(-0.0cm,0) $) {};
+\node[itemstyle] at ($ (bl4.center) +(0.3cm,0) $) {};
+\node[itemstyle] at ($ (bl4.center) +(0.6cm,0) $) {};
+
+  \begin{scope}[on background layer]
+  \node[fit = (bl1) (bll1) (bl2), densely dashed, thick, rectangle, draw]{};    
+
+  \node[fit = (bl3) (bll2) (bl4), densely dashed, thick, rectangle, draw]{};    
+  \end{scope}
+
+
+  \node[above= of bll1] (v1) {$\vdots$};
+  \node[above = of bll2] (v2) {$\vdots$};
+
+
+
+ \node[rectangle,minimum height=0.5cm, 
+above = of v1] (b2l1) {$\ldots$};
+
+  \node[mystyle, minimum width=1.2cm, left = of b2l1] (b21) {};
+\node[itemstyle] at ($ (b21.center) +(-0.3cm,0) $) {};
+\node[itemstyle] at ($ (b21.center) +(-0.0cm,0) $) {};
+\node[itemstyle] at ($ (b21.center) +(0.3cm,0) $) {};
+
+
+
+  \node[mystyle, minimum width=1.2cm, right = of b2l1] (b22) {};
+\node[itemstyle] at ($ (b22.center) +(-0.3cm,0) $) {};
+\node[itemstyle] at ($ (b22.center) +(-0.0cm,0) $) {};
+\node[itemstyle] at ($ (b22.center) +(0.3cm,0) $) {};
+
+ \node[rectangle,minimum height=0.5cm, 
+  above= of v2] (b2l2) {$\ldots$};
+
+  \node[mystyle,minimum width=1cm, left = of b2l2] (b23) {};
+\node[itemstyle] at ($ (b23.center) +(-0.15cm,0) $) {};
+\node[itemstyle] at ($ (b23.center) +(0.15cm,0) $) {};
+
+  \node[mystyle, minimum width=1cm, right = of b2l2] (b24) {};
+\node[itemstyle] at ($ (b24.center) +(-0.15cm,0) $) {};
+\node[itemstyle] at ($ (b24.center) +(0.15cm,0) $) {};
+
+  \begin{scope}[on background layer]
+  \node[fit = (b21) (b2l1) (b22), densely dashed, thick, rectangle, draw]{};    
+
+  \node[fit = (b23) (b2l2) (b24), densely dashed, thick, rectangle, draw]{};    
+  \end{scope}
+
+
+  \node[rectangle,minimum height=0.5cm, 
+  above= of b2l1,yshift=0.2cm] (b1l1) {$\ldots$};
+
+
+  \node[mystyle,minimum width=0.8cm, left= of b1l1] (b11) {};
+\node[itemstyle] at ($ (b11.center) +(-0.15cm,0) $) {};
+\node[itemstyle] at ($ (b11.center) +(0.15cm,0) $) {};
+
+
+
+  \node[mystyle, minimum
+  width=0.8cm, right= of b1l1] (b13) {};
+\node[itemstyle] at ($ (b13.center) +(-0.15cm,0) $) {};
+\node[itemstyle] at ($ (b13.center) +(0.15cm,0) $) {};
+
+
+
+  \node[rectangle,minimum height=0.5cm, 
+  above= of b2l2,yshift=0.2cm] (b1l2) {$\ldots$};
+
+  \node[mystyle,minimum
+  width=0.6cm, left= of b1l2] (b14) {};
+\node[itemstyle] at ($ (b14.center)$) {};
+
+  \node[mystyle,minimum
+  width=0.6cm, right= of b1l2] (b16) {};
+\node[itemstyle] at ($ (b16.center)$) {};
+
+
+  \begin{scope}[on background layer]
+  \node[fit = (b11) (b1l1) (b13), densely dashed, thick, rectangle, draw]{};    
+
+  \node[fit = (b14) (b1l2) (b16), densely dashed, thick, rectangle, draw]{};    
+  \end{scope}
+
+  \node[right = of bl4] (bls) {$(\varepsilon, 2\varepsilon]$}; 
+  \node at (bls |- v2) (s){$\vdots$};
+  \node at (s |- b2l1)  (b2s) {$(1/4,1/2]$};
+  \node at (b2s |- b1l1) {$(1/2, 1]$};
+
+
+\end{tikzpicture}
+
+\begin{itemize}
+\item \only<1>{\alert{Pack rounded items via LP}}\onslide<2->{Pack
+    rounded items via LP}
+\item<2-> \onslide<2->{\alert{Size of lists depends on volume of instance $\Rightarrow$ Shifting}}
+\end{itemize}
+  \begin{tikzpicture}[yscale=0.5]
+\onslide<3>{
+     \addToBin{9}{0}{.52}{$0.52$}{fill=black!20!white}{i6}{1}{5}
+  \addToBin{4.5}{0}{.6}{$0.6$}{fill=black!20!white}{i3}{1}{5}
+  \addToBin{0}{0}{.8}{$0.8$}{fill=black!20!white}{i0}{1}{5}
+  \addToBin{6}{0}{.6}{$0.6$}{fill=black!20!white}{i4}{1}{5}
+  \addToBin{3}{0}{.8}{$0.8$}{fill=black!20!white}{i2}{1}{5}
+  \addToBin{1.5}{0}{.8}{$0.8$}{fill=black!20!white}{i1}{1}{5}
+  \addToBin{7.5}{0}{.52}{$0.52$}{fill=black!20!white}{i5}{1}{5}
+
+  \begin{scope}[on background layer, y=4cm, x=1cm]
+    \onslide<3>{
+ \draw ($ (0,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(4cm,3.2cm) + (\boxpadding,\boxpadding)$);
+
+  \draw ($ (4.5,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(7cm,3.2cm) + (\boxpadding,\boxpadding)$);
+
+  \draw ($ (7.5,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(10cm,3.2cm) + (\boxpadding,\boxpadding)$);}
+
+ 
+  \begin{pgfonlayer}{l1}
+    \onslide<3>{
+    \draw[densely dashed, thick] ($ (0,0) + (-\boxpadding,-\boxpadding) + (-2pt,-9pt)$)
+    rectangle ($ (4cm,3.2cm) + (\boxpadding, \boxpadding)+
+    (2pt,9pt)$);
+
+    \draw[densely dashed, thick] ($ (4.5,0) + (-\boxpadding,-\boxpadding) + (-2pt,-9pt)$)
+    rectangle ($ (10cm,3.2cm) + (\boxpadding, \boxpadding)+ (2pt,9pt)$);}
+  \end{pgfonlayer}{l1}
+  \end{scope}}
+  
+
+
+\onslide<4>{
+  \addToBin{9}{0}{.52}{$0.52$}{fill=black!20!white}{i6}{1}{5}
+  \addToBin{4.5}{0}{.6}{$0.6$}{fill=black!20!white}{i3}{1}{5}
+  \addToBin{0}{0}{.8}{$0.8$}{fill=black!20!white}{i0}{1}{5}
+  \addToBin{6}{0}{.6}{$0.6$}{fill=black!20!white}{i4}{1}{5}
+  \addToBin{3}{0}{.8}{$0.8$}{fill=black!20!white}{i2}{1}{5}
+  \addToBin{1.5}{0}{.8}{$0.8$}{fill=black!20!white}{i1}{1}{5}
+  \addToBin{7.5}{0}{.52}{$0.52$}{fill=black!20!white}{i5}{1}{5}
+
+  \begin{scope}[on background layer, y=4cm, x=1cm]
+\onslide<4>{
+    \draw($ (0,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(4cm,3.2cm) + (\boxpadding,\boxpadding)$);
+
+  \draw ($ (4.5,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(8.5cm,3.2cm) + (\boxpadding,\boxpadding)$);
+
+  \draw ($ (9,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(10cm,3.2cm) + (\boxpadding,\boxpadding)$);
+}
+ 
+  \begin{pgfonlayer}{l1}
+\onslide<4>{
+    \draw[densely dashed, thick] ($ (0,0) + (-\boxpadding,-\boxpadding) + (-2pt,-9pt)$)
+    rectangle ($ (4cm,3.2cm) + (\boxpadding, \boxpadding)+
+    (2pt,9pt)$);
+
+    \draw[densely dashed, thick] ($ (4.5,0) + (-\boxpadding,-\boxpadding) + (-2pt,-9pt)$)
+    rectangle ($ (10cm,3.2cm) + (\boxpadding, \boxpadding)+ (2pt,9pt)$);}
+  \end{pgfonlayer}{l1}
+  \end{scope}}
+
+\onslide<5>{
+  \addToBin{9}{0}{.51}{$0.51$}{fill=black!20!white}{i6}{1}{5}
+  \addToBin{4.5}{0}{.6}{$0.6$}{fill=black!20!white}{i3}{1}{5}
+  \addToBin{0}{0}{.8}{$0.8$}{fill=black!20!white}{i0}{1}{5}
+  \addToBin{6}{0}{.6}{$0.6$}{fill=black!20!white}{i4}{1}{5}
+  \addToBin{3}{0}{.8}{$0.8$}{fill=black!20!white}{i2}{1}{5}
+  \addToBin{1.5}{0}{.8}{$0.8$}{fill=black!20!white}{i1}{1}{5}
+  \addToBin{7.5}{0}{.6}{$0.6$}{fill=black!20!white}{i5}{1}{5}
+
+  \begin{scope}[on background layer, y=4cm, x=1cm]
+\onslide<5>{
+    \draw ($ (0,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(4cm,3.2cm) + (\boxpadding,\boxpadding)$);
+
+  \draw ($ (4.5,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(8.5cm,3.2cm) + (\boxpadding,\boxpadding)$);
+
+  \draw ($ (9,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(10cm,3.2cm) + (\boxpadding,\boxpadding)$);
+}
+ 
+  \begin{pgfonlayer}{l1}
+\onslide<5>{
+    \draw[densely dashed, thick] ($ (0,0) + (-\boxpadding,-\boxpadding) + (-2pt,-9pt)$)
+    rectangle ($ (4cm,3.2cm) + (\boxpadding, \boxpadding)+
+    (2pt,9pt)$);
+
+    \draw[densely dashed, thick] ($ (4.5,0) + (-\boxpadding,-\boxpadding) + (-2pt,-9pt)$)
+    rectangle ($ (10cm,3.2cm) + (\boxpadding, \boxpadding)+ (2pt,9pt)$);}
+  \end{pgfonlayer}{l1}
+  \end{scope}}
+
+\onslide<6>{
+  \addToBin{9}{0}{.51}{$0.51$}{fill=black!20!white}{i6}{1}{6}
+  \addToBin{4.5}{0}{.6}{$0.6$}{fill=black!20!white}{i3}{1}{6}
+  \addToBin{0}{0}{.8}{$0.8$}{fill=black!20!white}{i0}{1}{6}
+  \addToBin{6}{0}{.6}{$0.6$}{fill=black!20!white}{i4}{1}{6}
+  \addToBin{3}{0}{.8}{$0.8$}{fill=black!20!white}{i2}{1}{6}
+  \addToBin{1.5}{0}{.8}{$0.8$}{fill=black!20!white}{i1}{1}{6}
+  \addToBin{7.5}{0}{.6}{$0.6$}{fill=black!20!white}{i5}{1}{6}
+
+  \begin{scope}[on background layer, y=4cm, x=1cm]
+\onslide<6>{
+    \draw ($ (0,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(4cm,3.2cm) + (\boxpadding,\boxpadding)$);
+
+  \draw ($ (4.5,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(8.5cm,3.2cm) + (\boxpadding,\boxpadding)$);
+
+  \draw ($ (9,0)+ (-\boxpadding, -\boxpadding)$) rectangle
+  ($(10cm,3.2cm) + (\boxpadding,\boxpadding)$);
+}
+ 
+  \begin{pgfonlayer}{l1}
+\onslide<6>{
+    \draw[densely dashed, thick] ($ (0,0) + (-\boxpadding,-\boxpadding) + (-2pt,-9pt)$)
+    rectangle ($ (8.5cm,3.2cm) + (\boxpadding, \boxpadding)+
+    (2pt,9pt)$);
+
+    \draw[densely dashed, thick] ($ (9,0) + (-\boxpadding,-\boxpadding) + (-2pt,-9pt)$)
+    rectangle ($ (10cm,3.2cm) + (\boxpadding, \boxpadding)+ (2pt,9pt)$);}
+  \end{pgfonlayer}{l1}
+  \end{scope}}
+  
+  \end{tikzpicture}
+
+
+
+% Bild anpassen
+\end{frame}
+
+\begin{frame}
+  \frametitle{Packing Small Items is Difficult}
+  \begin{block}{Greedy fails:  $\varepsilon\gg L\gg S$}
+   
+\vspace{1cm}
+
+    \begin{columns}
+      \begin{column}{0.56\textwidth}
+   \onslide<2->{     $($\myOperationName{INS}: $L$, 
+     \myOperationName{INS}: $S$,\ldots, \myOperationName{INS}:
+        $S$ $)^{\text{\Large $*$}}$
+\onslide<3->{
+   \begin{tikzpicture}[node distance=0.1cm]
+\drawBin{0}{3}{5}{}
+\addToBin{0}{0}{.3}{$L$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.3}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.4}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.5}{.1}{$S$}{fill=black!20!white}{L1}{3}{5}
+\addToBin{0}{.6}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.7}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.8}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.9}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+
+
+
+  \begin{scope}[xshift=3cm]
+\drawBin{0}{3}{5}{}
+\addToBin{0}{0}{.3}{$L$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.3}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.4}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.5}{.1}{$S$}{fill=black!20!white}{L2}{3}{5}
+\addToBin{0}{.6}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.7}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.8}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.9}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+  \end{scope}
+\node at ($ (L1) !.5! (L2)$) {\Large $\ldots$};
+ \end{tikzpicture}}}
+        
+      \end{column}
+
+      \begin{column}{0.43\textwidth}
+   \onslide<4->{ \myOperationName{REM}: $S$, \myOperationName{REM}: $S$,
+   $\ldots$
+\onslide<5->{
+ \begin{tikzpicture}[node distance=0.1cm]
+\drawBin{0}{5}{5}{}
+\addToBin{0}{0}{.3}{$L$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.5}{.1}{}{draw=none}{L1}{3}{5}
+ 
+
+ 
+
+ \begin{scope}[xshift=3cm]
+\drawBin{0}{5}{5}{}
+\addToBin{0}{0}{.3}{$L$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.5}{.1}{}{draw=none}{L2}{3}{5}
+
+ \end{scope}
+\node at ($ (L1) !.5! (L2)$) {\Large $\ldots$};
+ \end{tikzpicture}}}
+        
+      \end{column}
+    \end{columns}
+  \end{block}
+
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Packing Small Items via Sorting}
+  \begin{block}{Idea:    ``Sort'' small items from left to right}
+  \end{block}
+
+  \begin{center}
+    
+
+  \onslide<2->{
+    \begin{tikzpicture}
+
+      \node[thick,rectangle,minimum height=5mm,draw=white,fill=white]
+      (ops) {\myOperationName{INS}: $L$,
+     \myOperationName{INS}: $S$,\ldots, \myOperationName{INS}:
+        $S$,};
+
+    \onslide<4-8>{
+      \node[thick,draw=structure.fg,fill=structure.fg!20,rectangle,minimum
+      height=5mm, right= of ops, xshift=-1cm]{\myOperationName{INS}: $L$};
+      }
+      \onslide<9>{
+      \node[thick,rectangle,minimum
+      height=5mm, right= of ops, xshift=-1cm]{\myOperationName{INS}: $L$};
+      }
+    \end{tikzpicture}
+        
+
+   \begin{tikzpicture}[node distance=0.1cm]
+\drawBin{0}{3}{9}{}
+\onslide<3-4>{
+\addToBin{0}{0}{.3}{$L$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.3}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.4}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.5}{.1}{$S$}{fill=black!20!white}{L1}{3}{5}
+\addToBin{0}{.6}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.7}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.8}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.9}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+}
+
+\onslide<5>{
+\addToBin{0}{0}{.3}{$L$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.3}{.1}{$S$}{pattern=north west lines}{}{3}{5}
+\addToBin{0}{.4}{.1}{$S$}{pattern=north west lines}{}{3}{5}
+\addToBin{0}{.5}{.1}{$S$}{pattern= north west lines}{L1}{3}{5}
+\addToBin{0}{.6}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.7}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.8}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+\addToBin{0}{.9}{.1}{$S$}{fill=black!20!white}{}{3}{5}
+}
+
+\onslide<6->{
+\addToBin{0}{0}{.3}{$L$}{fill=black!20!white}{}{3}{9}
+\addToBin{0}{.3}{.3}{$L$}{fill=black!20!white}{}{3}{9}
+\addToBin{0}{.6}{.1}{$S$}{fill=black!20!white}{}{3}{9}
+\addToBin{0}{.7}{.1}{$S$}{fill=black!20!white}{}{3}{9}
+\addToBin{0}{.8}{.1}{$S$}{fill=black!20!white}{}{3}{9}
+\addToBin{0}{.9}{.1}{$S$}{fill=black!20!white}{}{3}{9}
+}
+
+\onslide<7->{
+\drawBin{1.5}{7}{9}{}
+\addToBin{1.5}{0}{.1}{$S$}{fill=black!20!white}{}{8}{9}
+\addToBin{1.5}{.1}{.1}{$S$}{fill=black!20!white}{}{8}{9}
+\addToBin{1.5}{.2}{.1}{$S$}{fill=black!20!white}{}{8}{9}
+
+
+}
+}
+
+ \end{tikzpicture}
+        
+
+      
+  \end{center}
+\onslide<9->{
+  \begin{block}{Stop at every $1/\varepsilon$-th bin (buffer bin) to
+      bound Migration}
+    
+  \end{block}
+}
+\end{frame}
+
+\begin{frame}
+  \frametitle{An Overview on the Packing}
+  \begin{center}
+  \begin{tikzpicture}
+    \drawBin{0}{1}{4}{}
+      \node at (0.5,-0.6) {\strut Large};
+      \node at (2,-0.6) {\strut Mixed};
+      \node at (3.5,-0.6) {\strut Small};
+    \drawBin{1.5}{1}{4}{}
+
+    \addToBin{0}{0}{.45}{}{fill=black!20!white}{}{1}{4}
+
+    \addToBin{0}{.45}{.45}{}{fill=black!20!white}{}{1}{4}
+
+    \addToBin{1.5}{0}{.45}{}{fill=black!20!white}{}{1}{4}
+    
+    \addToBin{1.5}{.45}{.1}{}{fill=black!20!white}{}{1}{4}
+
+
+    \addToBin{1.5}{.55}{.1}{}{fill=black!20!white}{}{1}{4}
+
+    \addToBin{1.5}{.65}{.1}{}{fill=black!20!white}{}{1}{4}
+
+    \addToBin{1.5}{.75}{.1}{}{fill=black!20!white}{}{1}{4}
+
+    \addToBin{1.5}{.85}{.1}{}{fill=black!20!white}{}{1}{4}
+
+
+
+    \drawBin{3}{1}{4}{}
+
+    \addToBin{3}{0}{.1}{}{fill=black!20!white}{}{1}{4}
+
+
+    \addToBin{3}{.1}{.1}{}{fill=black!20!white}{}{1}{4}
+
+    \addToBin{3}{.2}{.1}{}{fill=black!20!white}{}{1}{4}
+
+
+    \addToBin{3}{.3}{.1}{}{fill=black!20!white}{}{1}{4}
+
+
+    \addToBin{3}{.4}{.1}{}{fill=black!20!white}{}{1}{4}
+
+
+    \addToBin{3}{.5}{.1}{}{fill=black!20!white}{}{1}{4}
+
+    \addToBin{3}{.6}{.1}{}{fill=black!20!white}{}{1}{4}
+
+    \addToBin{3}{.7}{.1}{}{fill=black!20!white}{}{1}{4}
+
+    \addToBin{3}{.8}{.1}{}{fill=black!20!white}{}{1}{4}
+
+    \addToBin{3}{.9}{.1}{}{fill=black!20!white}{}{1}{4}
+
+    
+   \end{tikzpicture}
+  \begin{itemize}[<+-|alert@+>]
+  \item Pack large items via LP
+  \item Pack small items via ``Sorting''
+  \item Small bins $\Rightarrow$ little free space in other bins
+  \item Relate nearly full/empty bins via potential function
+  \end{itemize}
+  \end{center}
+\end{frame}
+
+
+
+\begin{frame}
+  \frametitle{Questions Left}
+  \begin{itemize}[<+-|alert@+>]
+  \item Can we improve the lower bound on MF from
+    $\Omega(1/\varepsilon)$? (\myOperationName{REM}-operation, $\omega(1)$ sizes)
+
+  \item Can we use ideas from offline bin packing to improve the running
+    time from
+    $\mathcal{O}(1/\varepsilon^{6}\cdot \log^{4}(1/\varepsilon)\cdot n)$?
+    (Plotkin and Shachnai and Yehezkely; Jansen and Kraft)
+  \item Can we simplify the handling of the small items?
+  \item Can we adapt our techniques to other problems?
+  \end{itemize}
+  
+\end{frame}
+\end{document}
+
+
+

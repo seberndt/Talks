@@ -1,0 +1,6 @@
+\beamer@endinputifotherversion {3.36pt}
+\select@language {english}
+\beamer@sectionintoc {1}{Steganography}{6}{0}{1}
+\beamer@sectionintoc {2}{Pattern Languages}{31}{0}{2}
+\beamer@sectionintoc {3}{The stegosystem}{39}{0}{3}
+\beamer@sectionintoc {4}{Conclusion}{58}{0}{4}

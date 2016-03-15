@@ -1,0 +1,470 @@
+\documentclass{beamer}
+\usetheme{CambridgeUS}
+%\useinnertheme[shadow]{rounded}
+
+\usecolortheme{dolphin}
+
+\usepackage[ngerman,english]{babel}
+
+\usepackage{stmaryrd}
+\usepackage{graphicx}
+\usepackage{ifpdf}
+\ifpdf
+\DeclareGraphicsRule{*}{mps}{*}{}
+\fi
+
+\usepackage{graphics}
+\input epsf
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+\setbeamertemplate{frametitle}{
+  \smallskip
+  \insertframetitle
+}
+\setbeamertemplate{headline}{
+  \begin{beamercolorbox}
+    [wd=1\textwidth,ht=3ex,dp=1.5ex,leftskip=.5em,rightskip=.5em]{title
+      in head/foot}%
+    \insertsectionnavigationhorizontal{0.75\textwidth}{}{}
+  \end{beamercolorbox}
+}
+
+\setbeamertemplate{footline}
+{\begin{beamercolorbox}
+    [wd=1\textwidth,ht=3ex,dp=1.5ex,leftskip=.5em,rightskip=.5em]{title in
+      head/foot}%
+    \center{\color{white}{Sebastian Berndt %
+        \quad\quad
+        {Derandomisierung}}}
+  \end{beamercolorbox}%
+}
+
+\usepackage{sberbeamer}
+\usepackage{color}
+\usepackage{pgflibraryshapes}
+\usetikzlibrary{decorations,arrows}
+\usetikzlibrary{decorations.pathmorphing}
+\usetikzlibrary{topaths,calc}
+\usetikzlibrary{positioning,automata,decorations.footprints}
+\usepgflibrary{decorations.pathreplacing}
+\DeclareMathOperator{\PCP}{PCP}
+\DeclareMathOperator{\fPCP}{fPCP}
+\DeclareMathOperator{\OPT}{OPT}
+\DeclareMathOperator{\poly}{poly}
+\DeclareMathOperator{\val}{val}
+\DeclareMathOperator{\bad}{bad}
+\newcommand{\set}[1]{\{#1\}}
+\newcommand{\floor}[1]{\lfloor#1\rfloor}
+\newcommand{\setst}[2]{\set{#1:#2}}
+% \setbeamercovered{transparent}
+
+\usepackage{ulem}
+
+\usepackage{pgfpages}
+% \setbeameroption{previous slide on second screen=left}
+
+
+% \pgfpagesuselayout{4 on 1}[a4paper,border shrink=5mm,landscape]
+
+\title[k-Matching in Hypergraphen]{Construction Of Deterministic
+  Algorithms\\\textit{Prabhakar Raghavan}}
+\subtitle{Derandomisierung randomisierter Algorithmen}
+\institute{Arbeitsgruppe Diskrete Optimierung\\Institut für
+  Informatik\\Christian-Albrechts-Universität zu Kiel}
+
+\author{Sebastian Berndt}
+\date{Juni 2011}
+\begin{document}
+
+\maketitle
+\begin{frame}{Inhalt}
+  \tableofcontents[pausesections,hideallsubsections]
+\end{frame}
+
+\section{KO 1 \& KO 2}
+\begin{frame}{Schnelle Wiederholung}
+  \NP-vollständige Probleme sind schwer zu lösen.
+  \begin{itemize}
+  \item[$\Rightarrow$] Approximative Lösungen
+  \item[$\Rightarrow$] Randomisierte Algorithmen
+  \end{itemize}
+\end{frame}  
+\begin{frame}{Lineare \& Ganzzahlige Programme}
+  \begin{definition}[Lineares / Ganzzahliges Programm]
+    Seien $A\in \mQ^{m\times n},c\in \mQ^{n}$ und $b\in \mQ^{m}$.
+    Dann heißt
+    \begin{align*}
+      &\max c^{\top}x\\
+      &Ax\leq b\\
+      &x\geq 0\\
+      &(x\in \mN)
+    \end{align*}
+    lineares (ganzzahliges) Programm.\\\bigskip
+    Konvention: $x_{i}$ sind ganzzahlige Lösungen,
+    $x_{i}^{*}$ sind fraktionale Lösungen.\\
+    $\OPT=c^{\top}x, \OPT^{*}=c^{\top}x^{*}$
+  \end{definition}
+\end{frame}
+\begin{frame}{Wichtige Theoreme}
+  
+  \begin{theorem}[Karp 1972]
+    Ganzzahlige Lineare Programme sind \NP-vollständig.
+  \end{theorem}\pause
+  \begin{theorem}[Khachiyan 1979]
+    Lineare Programme sind in $\Po$    
+  \end{theorem}
+\end{frame}
+
+\section{Runden}
+\begin{frame}{LP$\mapsto$ ILP}
+  \alert{Ab jetzt $x_{i}\in \set{0,1}$ und $x_{i}^{*}\in [0,1]$}
+  \pause
+  \begin{itemize}
+  \item Kaufmännisches Runden
+    \begin{align*}
+      x_{i}=
+      \begin{cases}
+        1 & x_{i}^{*}\geq 0.5\\
+        0 & x_{i}^{*} < 0.5
+      \end{cases}
+    \end{align*}
+    \pause
+  \item Randomisiertes Runden
+    \begin{align*}
+      \Pr[x_{i}=1]=x^{*}_{i}
+    \end{align*}
+  \end{itemize}
+\end{frame}
+\begin{frame}{Derandomisierung}
+  \begin{quote}
+    ``Anyone who considers arithmetical methods of producing random
+    digits is, of course, in a state of sin.''\\
+    (John von Neumann)
+  \end{quote}\pause
+  Lösung: Derandomisierung!
+\end{frame}
+
+\begin{frame}{Entscheidungsbaum}
+  Idee: Stelle Entscheidungen beim Runden als Baum dar!
+  \only<1>{\begin{tikzpicture}
+      [level distance=20mm,
+      level 1/.style={sibling distance=60mm},
+      level 2/.style={sibling distance=35mm},
+      level 3/.style={sibling distance=20mm},
+      struct/.style={fill=black!20,ellipse,align=center}
+      ]
+      \node[struct] {\set{}}
+      child{node[struct] {\set{$x_{1}=0$}}
+        child{node[struct] {\set{$x_{1}=0$,\\$ x_{2}=0$}}}
+        child{node[struct] {\set{$x_{1}=0$,\\$ x_{2}=1$}}}}
+      child{node[struct] {\set{$x_{1}=1$}}
+        child{node[struct] {\set{$x_{1}=1$,\\$ x_{2}=0$}}}
+        child{node[struct] {\set{$x_{1}=1$,\\$ x_{2}=1$}}}};
+    \end{tikzpicture}}
+  \only<2>{\begin{tikzpicture}
+      [level distance=20mm,
+      level 1/.style={sibling distance=60mm},
+      level 2/.style={sibling distance=35mm},
+      level 3/.style={sibling distance=20mm},
+      struct/.style={fill=black!20,ellipse,align=center}
+      ]
+      \node[struct] {\set{}}
+      child{node[struct] {\set{$x_{1}=0$}}
+        child{node[struct] {\set{$x_{1}=0$,\\$ x_{2}=0$}}}
+        child{node[struct] {\set{$x_{1}=0$,\\$ x_{2}=1$}}}}
+      child{node[struct] {\set{$x_{1}=1$}}
+        child{node[struct,fill=blue!70] {\set{$x_{1}=1$,\\$ x_{2}=0$}}}
+        child{node[struct] {\set{$x_{1}=1$,\\$ x_{2}=1$}}}};
+    \end{tikzpicture}}
+
+\end{frame}
+\begin{frame}{Notationen}
+  \begin{itemize}
+  \item Entscheidungsbaum $T$
+  \item Linker/Rechter Entscheidungsbaum $T_{L},T_{R}$
+  \item Teilbaum $T^{j}$, wenn $x_{1},\ldots,x_{j}$ schon bestimmt\pause
+  \item Wahrscheinlichkeit für schlechtes Ereignis im Baum $T^{j}$, wenn
+    die restlichen $x_{i}$ per RR bestimmt werden: $\bad(T^{j})$
+  \item $\bad(T^{j})\geq \min\set{\bad(T^{j}_{L}),\bad(T^{j}_{R})}$
+
+
+  \end{itemize}
+\end{frame}
+\begin{frame}{Algorithmische Idee}
+  Gilt $1>\bad(T)$, so wähle also entweder $T^{j}_{L}$ oder $T^{j}_{R}$!\\\pause
+  Erhalte Folge $T_{1},\ldots,T_{n}$ mit
+  \begin{align*}
+    1>\bad(T)\geq \bad(T_{1}) \geq \ldots \geq \bad(T_{n})
+  \end{align*}\\\pause
+  $T_{n}$ ist Blatt, also $\bad(T_{n})\in \set{0,1}$. Somit $\bad(T_{n})=0$!\\
+  \pause
+  Problem: $T$ hat $2^{n}$ Blätter
+  
+\end{frame}
+\begin{frame}{Pessimistischer Schätzer}
+  \begin{definition}[Pessimistischer Schätzer]
+    Für einen Entscheidungsbaum $T$ und alle seine Teilbäume $T^{j}$ heißt $U$
+    \emph{pessimistischer Schätzer (Pessimistic Estimator)}, wenn:
+    \begin{enumerate}
+    \item $1>U(T)$
+    \item $U(T^{j})\geq \bad(T^{j})$
+    \item $U(T^{j})\geq \min\set{U(T^{j}_{L}),U(T^{j}_{R})}$
+    \item $U(T^{j})$ ist polynomiell berechenbar
+    \end{enumerate}
+  \end{definition}\pause
+  \begin{theorem}[Hauptsatz]
+    Erhält man zu einem Problem $\Pi$ via RR einen randomisierten Algorithmus
+    mit Güte $A$ und gibt es einen pessimistischen Schätzer für $\Pi$,
+    so gibt es für $\Pi$ einen deterministischen, polynomiellen
+    Algorithmus mit Güte $A$.
+  \end{theorem}
+\end{frame}
+\begin{frame}[label=allgemein]{Allgemeines Vorgehen}
+  \begin{enumerate}
+  \item Löse LP
+  \item Zeige, dass es mit Randomisiertem Runden eine Lösung mit Güte
+    $A$ gibt
+  \item Bestimme einen pessimistischen Schätzer (durch Umbau des obigen Beweises)
+  \item Erhalte deterministischen Algorithmus mit Güte $A$
+  \end{enumerate}
+\end{frame}
+\section{k-Matchings in Hypergraphen}
+\begin{frame}{Problemstellung}
+  Gegeben: Hypergraph $H$ mit $r$ Kanten und $n$ Knoten\\
+  Gesucht: maximale Anzahl an Kanten, so dass jeder Knoten mit maximal $k$ Kanten
+  inzidiert.\\
+  \pause
+  \only<2>{
+    $k=2$
+    \begin{tikzpicture}[xscale=1.5]
+      \node (v1) at (0,2) {};
+      \node (v2) at (1.5,3) {};
+      \node (v3) at (4,2.5) {};
+      \node (v4) at (0,0) {};
+      \node (v5) at (2,0.5) {};
+      \node (v6) at (3.5,0) {};
+      \node (v7) at (2.5,-1) {};
+
+      \begin{scope}[fill opacity=0.8]
+        \filldraw[fill=yellow!70] ($(v1)+(-0.5,0)$) 
+        to[out=90,in=180] ($(v2) + (0,0.5)$) 
+        to[out=0,in=90] ($(v3) + (1,0)$)
+        to[out=270,in=0] ($(v2) + (1,-0.8)$)
+        to[out=180,in=270] ($(v1)+(-0.5,0)$);
+        \filldraw[fill=blue!70] ($(v4)+(-0.5,0.2)$)
+        to[out=90,in=180] ($(v4)+(0,1)$)
+        to[out=0,in=90] ($(v4)+(0.6,0.3)$)
+        to[out=270,in=0] ($(v4)+(0,-0.6)$)
+        to[out=180,in=270] ($(v4)+(-0.5,0.2)$);
+        \filldraw[fill=green!80] ($(v5)+(-0.5,0)$)
+        to[out=90,in=225] ($(v3)+(-0.5,-1)$)
+        to[out=45,in=270] ($(v3)+(-0.7,0)$)
+        to[out=90,in=180] ($(v3)+(0,0.5)$)
+        to[out=0,in=90] ($(v3)+(0.7,0)$)
+        to[out=270,in=90] ($(v3)+(-0.3,-1.8)$)
+        to[out=270,in=90] ($(v6)+(0.5,-0.3)$)
+        to[out=270,in=270] ($(v5)+(-0.5,0)$);
+        \filldraw[fill=red!70] ($(v2)+(-0.5,-0.2)$) 
+        to[out=90,in=180] ($(v2) + (0.2,0.4)$) 
+        to[out=0,in=180] ($(v3) + (0,0.3)$)
+        to[out=0,in=90] ($(v3) + (0.3,-0.1)$)
+        to[out=270,in=0] ($(v3) + (0,-0.3)$)
+        to[out=180,in=0] ($(v3) + (-1.3,0)$)
+        to[out=180,in=270] ($(v2)+(-0.5,-0.2)$);
+      \end{scope}
+
+
+      \foreach \v in {1,2,...,7} {
+        \fill (v\v) circle (0.1);
+      }
+
+      \fill (v1) circle (0.1) node [right] {$v_1$};
+      \fill (v2) circle (0.1) node [below left] {$v_2$};
+      \fill (v3) circle (0.1) node [left] {$v_3$};
+      \fill (v4) circle (0.1) node [below] {$v_4$};
+      \fill (v5) circle (0.1) node [below right] {$v_5$};
+      \fill (v6) circle (0.1) node [below left] {$v_6$};
+      \fill (v7) circle (0.1) node [below right] {$v_7$};
+
+      \node at (0.2,2.8) {$e_1$};
+      \node at (2.3,3) {$e_2$};
+      \node at (3,0.8) {$e_3$};
+      \node at (0.1,0.7) {$e_4$};
+    \end{tikzpicture}}
+  \only<3>{
+    $k=2$
+    \begin{tikzpicture}[xscale=1.5]
+      \node (v1) at (0,2) {};
+      \node (v2) at (1.5,3) {};
+      \node (v3) at (4,2.5) {};
+      \node (v4) at (0,0) {};
+      \node (v5) at (2,0.5) {};
+      \node (v6) at (3.5,0) {};
+      \node (v7) at (2.5,-1) {};
+
+      \begin{scope}[fill opacity=0.8]
+        \filldraw[fill=blue!70] ($(v1)+(-0.5,0)$) 
+        to[out=90,in=180] ($(v2) + (0,0.5)$) 
+        to[out=0,in=90] ($(v3) + (1,0)$)
+        to[out=270,in=0] ($(v2) + (1,-0.8)$)
+        to[out=180,in=270] ($(v1)+(-0.5,0)$);
+        \filldraw[fill=blue!70] ($(v4)+(-0.5,0.2)$)
+        to[out=90,in=180] ($(v4)+(0,1)$)
+        to[out=0,in=90] ($(v4)+(0.6,0.3)$)
+        to[out=270,in=0] ($(v4)+(0,-0.6)$)
+        to[out=180,in=270] ($(v4)+(-0.5,0.2)$);
+        \filldraw[fill=blue!80] ($(v5)+(-0.5,0)$)
+        to[out=90,in=225] ($(v3)+(-0.5,-1)$)
+        to[out=45,in=270] ($(v3)+(-0.7,0)$)
+        to[out=90,in=180] ($(v3)+(0,0.5)$)
+        to[out=0,in=90] ($(v3)+(0.7,0)$)
+        to[out=270,in=90] ($(v3)+(-0.3,-1.8)$)
+        to[out=270,in=90] ($(v6)+(0.5,-0.3)$)
+        to[out=270,in=270] ($(v5)+(-0.5,0)$);
+        \filldraw[fill=black!70] ($(v2)+(-0.5,-0.2)$) 
+        to[out=90,in=180] ($(v2) + (0.2,0.4)$) 
+        to[out=0,in=180] ($(v3) + (0,0.3)$)
+        to[out=0,in=90] ($(v3) + (0.3,-0.1)$)
+        to[out=270,in=0] ($(v3) + (0,-0.3)$)
+        to[out=180,in=0] ($(v3) + (-1.3,0)$)
+        to[out=180,in=270] ($(v2)+(-0.5,-0.2)$);
+      \end{scope}
+
+
+      \foreach \v in {1,2,...,7} {
+        \fill (v\v) circle (0.1);
+      }
+
+      \fill (v1) circle (0.1) node [right] {$v_1$};
+      \fill (v2) circle (0.1) node [below left] {$v_2$};
+      \fill (v3) circle (0.1) node [left] {$v_3$};
+      \fill (v4) circle (0.1) node [below] {$v_4$};
+      \fill (v5) circle (0.1) node [below right] {$v_5$};
+      \fill (v6) circle (0.1) node [below left] {$v_6$};
+      \fill (v7) circle (0.1) node [below right] {$v_7$};
+
+      \node at (0.2,2.8) {$e_1$};
+      \node at (2.3,3) {$e_2$};
+      \node at (3,0.8) {$e_3$};
+      \node at (0.1,0.7) {$e_4$};
+    \end{tikzpicture}}
+\end{frame}
+\begin{frame}{Formulierung als IP}
+  \begin{itemize}
+  \item $A\in \set{0,1}^{n\times r}$ Inzidenzmatrix
+    ($a_{ij}=1\Leftrightarrow v_{i}\in e_{j}$)
+  \item $b=\vec{k}$
+  \item $c=\vec{1}$
+  \item $x_{j}$ für Kante $e_{j}$
+  \end{itemize}
+  \pause
+  \begin{block}{IP für $k$-Matching}
+    \begin{align*}
+      &\max c^{\top}x\\
+      &s.t. \sum_{j=1}^{r}a_{ij}x_{j}\leq k&\forall i\in \set{1,\ldots,n}\\
+      &x_{j}\in \set{0,1}&\forall j\in \set{1,\ldots,r}
+    \end{align*}
+  \end{block}
+  
+\end{frame}
+\begin{frame}{Randomisiertes Runden}
+  \begin{itemize}
+  \item $\Rightarrow
+    \mE[\sum_{j=1}^{r}x_{j}]=\sum_{i=j}^{r}x^{*}_{j}=\OPT^{*}\geq \OPT$
+  \item $\Rightarrow
+    \mE[\sum_{j=1}^{r}a_{ij}x_{j}]=\sum_{j=1}^{r}a_{ij}x^{*}_{j}\leq k$
+  \end{itemize}\pause
+  Problem: $\Pr[\sum_{j=1}^{r}a_{ij}x_{j}>k]$ ist sehr hoch!
+\end{frame}
+
+\begin{frame}{Einschub}
+  \begin{lemma}[Lemma 1]
+    $X_{i}$ binäre Zufallsvariablen, $a_{i}\in
+    [0,1]$, $\delta>0,\gamma\in (0,1]$ und $X=\sum_{i}a_{i}X_{i}$. Dann gilt:
+    \begin{align*}
+      &\Pr[X>(1+\delta)\mE[X]]<(\frac{\exp(\delta)}{(1+\delta)^{(1+\delta)}})^{\mE[X]}
+      =:B(\mE[X],\delta)\\
+      &\Pr[X<(1-\gamma)\mE[X]]<B(\mE[X],\gamma)\\
+    \end{align*}
+  \end{lemma}\pause
+  \begin{proof}
+    Markov-Ungleichung, $e^{x}\geq x+1$, Bernoulli-Ungleichung
+  \end{proof}\pause
+  Zur Abkürzung: $D(\mE[X],x)$ mit $B(\mE[X],D(\mE[X],x))=x$.
+  
+\end{frame}
+\begin{frame}{Lösung}
+  \begin{block}{Skalierung}
+    Skaliere $\Pr[x_{i}=1]$ mit $\alpha\in (0,1)$, so dass
+    $B(\alpha k,\frac{1-\alpha}{\alpha})\leq\frac{1}{n+1}$\\
+    Erhalte dann $x^{S}_{j}$ mit $\Pr[x_{j}^{S}=1]=\alpha x_{j}^{*}$.
+  \end{block}
+  \pause
+  \begin{lemma}[Lemma 2]
+    Falls $k>\ln(n)$, so ist $\alpha$ konstant.\\
+    Falls $k\leq \ln(n)$, so ist $\alpha$ abhängig von $n$.
+  \end{lemma}\pause
+  \begin{theorem}
+    Es gibt ein k-Matching mit Kardinalität $K$ mit
+    \begin{align*}
+      K\geq \alpha\OPT^{*}\cdot (1-D(\alpha\OPT^{*},1/(n+1)))
+    \end{align*}
+  \end{theorem}
+\end{frame}
+
+\subsection{Pessimistic Estimator finden}
+\begin{frame}{Warnung}
+  \alert{  Ab hier:\\
+    Ein konkreter pessimistischer Schätzer für $k$-Matchings.}
+  \begin{block}{Warnung}
+    Here be dragons! ($e^{x},\ln(x),\ldots$)
+  \end{block}
+  
+\end{frame}
+\begin{frame}{Einschub 2}
+  \begin{lemma}[Lemma 3]
+    Es gilt mit $t=\ln(1+D(\alpha
+    k,\frac{1-\alpha}{\alpha}))$,$t'=\ln(1+D(\alpha \OPT^{*},1/(n+1)))$
+    und $\mu=\alpha\OPT^{*}$:
+    \begin{align*}
+      &\Pr[\sum_{j=1}^{r}a_{ij}x^{S}_{j}>k]\leq \exp(-tk)\prod_{j=1}^{r}[x^{*}_{j}\exp(ta_{ij})+1-x^{*}_{j}]\\
+      &\Pr[\sum_{j=1}^{r}x^{S}_{j}<\mu(1-D(\mu,1/(n+1)))]\leq\\
+      &\exp(t'\mu(1-D(\mu,1/(n+1)))\prod_{j=1}^{r}[x^{*}_{j}\exp(-t')+1-x^{*}_{j}]
+    \end{align*}
+  \end{lemma}
+  \begin{proof}
+    Zwischenergebnis Lemma 1
+  \end{proof}
+\end{frame}
+\begin{frame}{Der gesuchte Schätzer}
+  \begin{theorem}[Pessimistischer Schätzer für $k$-Matching]
+    Das folgende $U$ ist ein pessimistischer Schätzer für $k$-Matching
+    mit $\mu=\alpha\OPT^{*}$:
+    \begin{align*}
+      U(T)=&\sum_{i=1}^{n}e^{-tk}\prod_{j=1}^{r}[x^{*}_{j}e^{a_{ij}t}+1-x^{*}_{j}]\\
+      &+e^{t'\mu(1-D(\mu,1/n+1))}\prod_{j=1}^{r}[x_{j}^{*}e^{-t'}+1-x^{*}_{j}]
+    \end{align*}
+    mit $t=\ln(1+D(\alpha k,\frac{1-\alpha}{\alpha })),t'=\ln(1+D(\mu,1/n+1))$
+  \end{theorem}
+\end{frame}
+
+\begin{frame}{Ziellinie}
+  \begin{theorem}
+    Für einen Hypergraphen lässt sich deterministisch in polynomieller
+    Zeit ein $k$-Matching der Kardinalität $K$ mit 
+    \begin{align*}
+      K\geq \alpha \OPT^{*}\cdot (1-D(\alpha \OPT^{*},1/(n+1)))=\mu(1-D(\mu,1/(n+1)))
+    \end{align*}
+    bestimmen.
+  \end{theorem}
+\end{frame}
+
+
+\againframe{allgemein}
+\begin{frame}
+  \begin{center}
+    \Huge{Danke!}\\
+    \small{Fragen?}
+  \end{center}
+\end{frame}
+\end{document}

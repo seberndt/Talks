@@ -1,0 +1,76 @@
+\documentclass[parskip]{scrartcl}
+\usepackage[margin=15mm]{geometry}
+\usepackage{tikz}
+
+\begin{document}
+
+\newcommand{\regionA}[1]
+{   \fill[#1] (30:2) arc (60:0:{2*sqrt(3)}) arc (-60:120:{2*sqrt(3)}) arc (60:0:{2*sqrt(3)});
+}
+
+\newcommand{\regionB}[1]
+{   \fill[#1] (150:2) arc (180:120:{2*sqrt(3)}) arc (60:240:{2*sqrt(3)}) arc (180:120:{2*sqrt(3)});
+}
+
+\newcommand{\regionC}[1]
+{   \fill[#1] (270:2) arc (240:300:{2*sqrt(3)}) arc (360:180:{2*sqrt(3)}) arc (240:300:{2*sqrt(3)});
+}
+
+\newcommand{\regionAB}[1]
+{   \fill[#1] (30:2) arc (0:60:{2*sqrt(3)}) arc (120:180:{2*sqrt(3)}) arc (120:60:{2*sqrt(3)});
+}
+
+\newcommand{\regionAC}[1]
+{   \fill[#1] (30:2) arc (60:0:{2*sqrt(3)}) arc (300:240:{2*sqrt(3)}) arc (-60:0:{2*sqrt(3)});
+}
+
+\newcommand{\regionBC}[1]
+{   \fill[#1] (150:2) arc (120:180:{2*sqrt(3)}) arc (240:300:{2*sqrt(3)}) arc (240:180:{2*sqrt(3)});
+}
+
+\newcommand{\regionABC}[1]
+{   \fill[#1] (30:2) arc (60:120:{2*sqrt(3)}) arc (180:240:{2*sqrt(3)}) arc (-60:0:{2*sqrt(3)});
+}
+
+\newcommand{\regionDarkside}[1]
+{   \fill[#1,even odd rule] (90:4) arc (120:-60:{2*sqrt(3)}) arc (360:180:{2*sqrt(3)}) arc (240:60:{2*sqrt(3)}) (0,0) circle (7);
+}
+\definecolor{oceangreen}{cmyk}{1,0,.2,.78} 
+\newcommand{\mycolor}{oceangreen!75!white}
+\newcommand{\mynocolor}{white}
+
+\foreach \a in {\mycolor,\mynocolor}
+{   \foreach \b in {\mycolor,\mynocolor}
+    { \foreach \c in {\mycolor,\mynocolor}
+        {   \foreach \d in {\mycolor,\mynocolor}
+            {   \foreach \e in {\mycolor,\mynocolor}
+                { \foreach \f in {\mycolor,\mynocolor}
+                    {   \foreach \g in {\mycolor,\mynocolor}
+                        {   \foreach \h in {\mycolor,\mynocolor}
+                            {   \begin{tikzpicture}[scale=0.05]
+                                    \regionA{\a}
+                                    \regionB{\b}
+                                    \regionC{\c}
+                                    \regionAB{\d}
+                                    \regionAC{\e}
+                                    \regionBC{\f}
+                                    \regionABC{\g}
+                                    \regionDarkside{\h}
+                                    \draw (30:2) circle ({2*sqrt(3)});
+                                    \draw (150:2) circle ({2*sqrt(3)});
+                                    \draw (270:2) circle ({2*sqrt(3)});
+                                    \draw (0,0) circle (7);
+                                    \clip (0,0) circle (7);
+                                    \useasboundingbox (0,0) circle (7);
+                                \end{tikzpicture}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+\phantom{X}
+
+\end{document}
